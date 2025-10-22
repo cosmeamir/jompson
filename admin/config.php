@@ -18,6 +18,8 @@ function load_data(): array
                 'experience' => 0,
             ],
             'blogs' => [],
+            'courses' => [],
+            'course_registrations' => [],
         ];
     }
 
@@ -32,11 +34,15 @@ function load_data(): array
                 'experience' => 0,
             ],
             'blogs' => [],
+            'courses' => [],
+            'course_registrations' => [],
         ];
     }
 
     $data['stats'] = $data['stats'] ?? [];
     $data['blogs'] = $data['blogs'] ?? [];
+    $data['courses'] = $data['courses'] ?? [];
+    $data['course_registrations'] = $data['course_registrations'] ?? [];
 
     return $data;
 }
