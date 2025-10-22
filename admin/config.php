@@ -1,0 +1,71 @@
+<?php
+session_start();
+
+const ADMIN_USER = 'admin';
+const ADMIN_PASS = 'admin123';
+const DATA_FILE = __DIR__ . '/../data/site-data.json';
+const UPLOAD_DIR = __DIR__ . '/../uploads/blog';
+const UPLOAD_URL = 'uploads/blog';
+const MAX_UPLOAD_SIZE = 2 * 1024 * 1024; // 2MB
+
+function load_data(): array
+{
+    if (!file_exists(DATA_FILE)) {
+        return [
+            'stats' => [
+                'services' => 0,
+                'clients' => 0,
+                'experience' => 0,
+            ],
+            'blogs' => [],
+        ];
+    }
+
+    $json = file_get_contents(DATA_FILE);
+    $data = json_decode($json, true);
+
+    if (!is_array($data)) {
+        return [
+            'stats' => [
+                'services' => 0,
+                'clients' => 0,
+                'experience' => 0,
+            ],
+            'blogs' => [],
+        ];
+    }
+
+    $data['stats'] = $data['stats'] ?? [];
+    $data['blogs'] = $data['blogs'] ?? [];
+
+    return $data;
+}
+
+function save_data(array $data): void
+{
+    $dir = dirname(DATA_FILE);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0775, true);
+    }
+
+    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    file_put_contents(DATA_FILE, $json, LOCK_EX);
+}
+
+function ensure_logged_in(): void
+{
+    if (empty($_SESSION['admin_logged_in'])) {
+        header('Location: login.php');
+        exit;
+    }
+}
+
+function slugify(string $text): string
+{
+    $text = iconv('UTF-8', 'ASCII//TRANSLIT', $text);
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+    $text = trim($text, '-');
+    $text = strtolower($text);
+    $text = preg_replace('~[^-a-z0-9]+~', '', $text);
+    return $text ?: 'post-' . uniqid();
+}
