@@ -8,6 +8,26 @@ $stats = array_merge([
     'experience' => 0,
 ], $data['stats']);
 $blogs = $data['blogs'];
+$courses = $data['courses'];
+$courseRegistrations = $data['course_registrations'];
+
+usort($courses, static function (array $a, array $b): int {
+    $categoryComparison = strcasecmp($a['category'] ?? '', $b['category'] ?? '');
+    if ($categoryComparison !== 0) {
+        return $categoryComparison;
+    }
+
+    $subcategoryComparison = strcasecmp($a['subcategory'] ?? '', $b['subcategory'] ?? '');
+    if ($subcategoryComparison !== 0) {
+        return $subcategoryComparison;
+    }
+
+    return strcasecmp($a['title'] ?? '', $b['title'] ?? '');
+});
+
+usort($courseRegistrations, static function (array $a, array $b): int {
+    return strcmp($b['submitted_at'] ?? '', $a['submitted_at'] ?? '');
+});
 $successMessage = $_SESSION['admin_success'] ?? null;
 $errorMessage = $_SESSION['admin_error'] ?? null;
 unset($_SESSION['admin_success'], $_SESSION['admin_error']);
@@ -316,6 +336,108 @@ function admin_asset(string $path): string
             margin-bottom: 20px;
         }
 
+        .content-section {
+            margin-top: 48px;
+        }
+
+        .course-admin-grid {
+            display: grid;
+            gap: 26px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        }
+
+        .course-admin-grid .module-card header {
+            margin-bottom: 22px;
+        }
+
+        .course-admin-grid .module-card header h2 {
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .course-admin-grid .module-card header span {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .course-list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .course-list thead {
+            background: var(--surface-alt);
+        }
+
+        .course-list th,
+        .course-list td {
+            padding: 12px 14px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+            vertical-align: top;
+        }
+
+        .course-list tbody tr:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .course-badge {
+            display: inline-flex;
+            align-items: center;
+            background: var(--primary-soft);
+            color: var(--primary);
+            border-radius: 999px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .course-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .course-actions form {
+            display: inline;
+        }
+
+        .course-empty {
+            padding: 24px;
+            background: var(--surface-alt);
+            border-radius: 16px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .registration-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .registration-table th,
+        .registration-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            font-size: 14px;
+        }
+
+        .registration-table thead {
+            background: var(--surface-alt);
+        }
+
+        .registration-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .course-form-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .blog-card {
             background: var(--surface);
             border-radius: var(--radius-lg);
@@ -438,8 +560,10 @@ function admin_asset(string $path): string
         <ul class="sidebar-nav">
             <li><a class="active" href="dashboard.php"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
             <li><a href="../index.html" target="_blank"><i class="bi bi-globe2"></i>Ver site</a></li>
-            <li><a href="#blogs"><i class="bi bi-journal-text"></i>Blog</a></li>
             <li><a href="#indicadores"><i class="bi bi-bar-chart"></i>Indicadores</a></li>
+            <li><a href="#courses"><i class="bi bi-mortarboard"></i>Cursos</a></li>
+            <li><a href="#inscricoes"><i class="bi bi-people"></i>Inscrições</a></li>
+            <li><a href="#blogs"><i class="bi bi-journal-text"></i>Blog</a></li>
         </ul>
         <div class="sidebar-footer">
             <div class="d-flex align-items-center mb-2"><i class="bi bi-shield-lock mr-2"></i> Sessão segura</div>
@@ -482,6 +606,18 @@ function admin_asset(string $path): string
                 <h3>Artigos</h3>
                 <strong><?php echo number_format(count($blogs), 0, ',', '.'); ?></strong>
                 <span>Total publicados</span>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon"><i class="bi bi-mortarboard"></i></div>
+                <h3>Cursos</h3>
+                <strong><?php echo number_format(count($courses), 0, ',', '.'); ?></strong>
+                <span>Disponíveis no site</span>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon"><i class="bi bi-person-lines-fill"></i></div>
+                <h3>Pré-inscrições</h3>
+                <strong><?php echo number_format(count($courseRegistrations), 0, ',', '.'); ?></strong>
+                <span>Contactos recebidos</span>
             </div>
         </div>
 
@@ -566,6 +702,207 @@ function admin_asset(string $path): string
             </section>
         </div>
 
+        <section id="courses" class="content-section">
+            <div class="course-admin-grid">
+                <section class="module-card">
+                    <header>
+                        <h2 id="course-form-title">Adicionar curso</h2>
+                        <span>Actualize categorias, subcategorias e conteúdos apresentados no site.</span>
+                    </header>
+                    <form id="course-form" method="post" action="save_course.php">
+                        <input type="hidden" name="mode" id="course-mode" value="create">
+                        <input type="hidden" name="course_id" id="course-id" value="">
+                        <p class="text-muted small" id="course-form-helper">Preenche os campos para adicionar um novo curso ao catálogo.</p>
+                        <div class="form-group">
+                            <label for="course-category">Categoria</label>
+                            <input type="text" class="form-control" id="course-category" name="category" placeholder="Formação Executiva" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-subcategory">Subcategoria</label>
+                            <input type="text" class="form-control" id="course-subcategory" name="subcategory" placeholder="Finanças &amp; Contabilidade" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-title">Título do curso</label>
+                            <input type="text" class="form-control" id="course-title" name="title" placeholder="Elaboração e Técnicas de Negociação de Contratos" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-headline">Chamada curta</label>
+                            <input type="text" class="form-control" id="course-headline" name="headline" placeholder="Domine a negociação de contratos empresariais.">
+                            <small class="form-text text-muted">Um resumo breve que aparece junto ao título do curso.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-overview">Apresentação</label>
+                            <textarea class="form-control" id="course-overview" name="overview" rows="3" placeholder="Descreve o contexto, público-alvo e resultados esperados."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-general-objectives">Objectivos gerais</label>
+                            <textarea class="form-control" id="course-general-objectives" name="general_objectives" rows="3" placeholder="Lista cada objectivo numa linha."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-specific-objectives">Objectivos específicos</label>
+                            <textarea class="form-control" id="course-specific-objectives" name="specific_objectives" rows="3" placeholder="Lista cada objectivo numa linha."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-contents">Conteúdos e módulos</label>
+                            <textarea class="form-control" id="course-contents" name="contents" rows="4" placeholder="Detalha os módulos ou tópicos do programa, um por linha."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-details">Informações rápidas</label>
+                            <textarea class="form-control" id="course-details" name="details" rows="3" placeholder="Inclui carga horária, modalidade, certificação, investimento, etc."></textarea>
+                            <small class="form-text text-muted">Cada linha é apresentada como um item de destaque ao lado da descrição.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-pdf">Ficha ou brochura (URL)</label>
+                            <input type="url" class="form-control" id="course-pdf" name="pdf_url" placeholder="https://...">
+                            <small class="form-text text-muted">Opcional: liga a uma ficha técnica ou PDF do curso.</small>
+                        </div>
+                        <div class="course-form-actions">
+                            <button type="submit" class="btn btn-success" id="course-submit">Guardar curso</button>
+                            <button type="button" class="btn btn-outline-primary" id="course-reset">Novo curso</button>
+                        </div>
+                    </form>
+                </section>
+                <section class="module-card">
+                    <header>
+                        <h2>Cursos publicados</h2>
+                        <span>Organiza o menu vertical conforme a imagem de referência.</span>
+                    </header>
+                    <?php if (empty($courses)): ?>
+                        <div class="course-empty">
+                            Ainda não existem cursos registados. Adiciona o primeiro curso para activar a página pública.
+                        </div>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="course-list">
+                                <thead>
+                                    <tr>
+                                        <th>Categoria</th>
+                                        <th>Subcategoria</th>
+                                        <th>Curso</th>
+                                        <th>Actualização</th>
+                                        <th class="text-right">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($courses as $course): ?>
+                                        <?php
+                                            $updatedAtRaw = $course['updated_at'] ?? '';
+                                            $updatedDisplay = '—';
+                                            if ($updatedAtRaw !== '') {
+                                                $timestamp = strtotime($updatedAtRaw);
+                                                if ($timestamp !== false) {
+                                                    $updatedDisplay = date('d/m/Y H:i', $timestamp);
+                                                } else {
+                                                    $updatedDisplay = $updatedAtRaw;
+                                                }
+                                            }
+                                            $encodedCourse = htmlspecialchars(json_encode($course, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+                                        ?>
+                                        <tr>
+                                            <td><span class="course-badge"><?php echo htmlspecialchars($course['category'], ENT_QUOTES, 'UTF-8'); ?></span></td>
+                                            <td><span class="course-badge"><?php echo htmlspecialchars($course['subcategory'], ENT_QUOTES, 'UTF-8'); ?></span></td>
+                                            <td>
+                                                <strong><?php echo htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                                <?php if (!empty($course['headline'])): ?>
+                                                    <div class="text-muted small mt-1"><?php echo htmlspecialchars($course['headline'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($updatedDisplay, ENT_QUOTES, 'UTF-8'); ?></td>
+                                            <td class="text-right">
+                                                <div class="course-actions">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm course-edit-btn" data-course="<?php echo $encodedCourse; ?>">Editar</button>
+                                                    <form method="post" action="delete_course.php" onsubmit="return confirm('Eliminar este curso?');">
+                                                        <input type="hidden" name="course_id" value="<?php echo htmlspecialchars($course['id'], ENT_QUOTES, 'UTF-8'); ?>">
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm">Eliminar</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </section>
+            </div>
+        </section>
+
+        <section id="inscricoes" class="content-section">
+            <div class="module-card">
+                <header>
+                    <h2>Pré-inscrições recebidas</h2>
+                    <span>Acompanhe as candidaturas enviadas pela página de cursos.</span>
+                </header>
+                <?php if (empty($courseRegistrations)): ?>
+                    <div class="course-empty">Ainda não recebemos inscrições. Assim que o formulário for submetido, elas aparecerão aqui.</div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="registration-table">
+                            <thead>
+                                <tr>
+                                    <th>Participante</th>
+                                    <th>Empresa / País</th>
+                                    <th>Curso e Pagamento</th>
+                                    <th>Mensagem</th>
+                                    <th>Recebido</th>
+                                    <th class="text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($courseRegistrations as $registration): ?>
+                                    <?php
+                                        $submittedAtRaw = $registration['submitted_at'] ?? '';
+                                        $submittedDisplay = '—';
+                                        if ($submittedAtRaw !== '') {
+                                            $timestamp = strtotime($submittedAtRaw);
+                                            if ($timestamp !== false) {
+                                                $submittedDisplay = date('d/m/Y H:i', $timestamp);
+                                            } else {
+                                            $submittedDisplay = $submittedAtRaw;
+                                            }
+                                        }
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?php echo htmlspecialchars($registration['nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                            <span class="registration-meta"><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($registration['email'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <span class="registration-meta"><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($registration['telefone'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($registration['empresa'])): ?>
+                                                <div><?php echo htmlspecialchars($registration['empresa'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                            <?php endif; ?>
+                                            <?php if (!empty($registration['pais'])): ?>
+                                                <span class="registration-meta">País: <?php echo htmlspecialchars($registration['pais'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php endif; ?>
+                                            <span class="registration-meta">BI/NIF: <?php echo htmlspecialchars($registration['documento'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php if (!empty($registration['profissao'])): ?>
+                                                <span class="registration-meta">Profissão: <?php echo htmlspecialchars($registration['profissao'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div><strong><?php echo htmlspecialchars($registration['curso'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
+                                            <span class="registration-meta">Forma de pagamento: <?php echo htmlspecialchars($registration['forma_pagamento'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </td>
+                                        <td style="min-width: 220px;">
+                                            <?php echo nl2br(htmlspecialchars($registration['mensagem'], ENT_QUOTES, 'UTF-8')); ?>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($submittedDisplay, ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td class="text-right">
+                                            <form method="post" action="delete_registration.php" onsubmit="return confirm('Eliminar esta inscrição?');">
+                                                <input type="hidden" name="registration_id" value="<?php echo htmlspecialchars($registration['id'], ENT_QUOTES, 'UTF-8'); ?>">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">Eliminar</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </section>
+
         <h2 id="blogs" class="section-title">Artigos publicados</h2>
         <?php if (empty($blogs)): ?>
             <div class="alert alert-info">Ainda não existem artigos publicados.</div>
@@ -648,5 +985,85 @@ function admin_asset(string $path): string
 </div>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var courseForm = document.getElementById('course-form');
+        if (!courseForm) {
+            return;
+        }
+
+        var modeInput = document.getElementById('course-mode');
+        var idInput = document.getElementById('course-id');
+        var helper = document.getElementById('course-form-helper');
+        var title = document.getElementById('course-form-title');
+        var submitButton = document.getElementById('course-submit');
+        var resetButton = document.getElementById('course-reset');
+
+        var fieldMap = {
+            category: document.getElementById('course-category'),
+            subcategory: document.getElementById('course-subcategory'),
+            title: document.getElementById('course-title'),
+            headline: document.getElementById('course-headline'),
+            overview: document.getElementById('course-overview'),
+            general_objectives: document.getElementById('course-general-objectives'),
+            specific_objectives: document.getElementById('course-specific-objectives'),
+            contents: document.getElementById('course-contents'),
+            details: document.getElementById('course-details'),
+            pdf_url: document.getElementById('course-pdf')
+        };
+
+        function setMode(mode) {
+            if (mode === 'update') {
+                modeInput.value = 'update';
+                submitButton.textContent = 'Actualizar curso';
+                helper.textContent = 'Edita a informação do curso seleccionado e guarda para actualizar no site.';
+                title.textContent = 'Editar curso';
+            } else {
+                modeInput.value = 'create';
+                submitButton.textContent = 'Guardar curso';
+                helper.textContent = 'Preenche os campos para adicionar um novo curso ao catálogo.';
+                title.textContent = 'Adicionar curso';
+                idInput.value = '';
+            }
+        }
+
+        setMode(modeInput.value || 'create');
+
+        if (resetButton) {
+            resetButton.addEventListener('click', function () {
+                courseForm.reset();
+                setMode('create');
+                if (fieldMap.category) {
+                    fieldMap.category.focus();
+                }
+            });
+        }
+
+        document.querySelectorAll('.course-edit-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var payload = button.getAttribute('data-course');
+                if (!payload) {
+                    return;
+                }
+
+                try {
+                    var course = JSON.parse(payload);
+                    setMode('update');
+                    idInput.value = course.id || '';
+                    Object.keys(fieldMap).forEach(function (key) {
+                        if (Object.prototype.hasOwnProperty.call(fieldMap, key) && fieldMap[key]) {
+                            fieldMap[key].value = course[key] ? course[key] : '';
+                        }
+                    });
+                    if (fieldMap.category) {
+                        fieldMap.category.focus();
+                    }
+                } catch (error) {
+                    console.error('Não foi possível carregar os dados do curso selecionado.', error);
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>
