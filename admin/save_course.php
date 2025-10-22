@@ -16,8 +16,8 @@ function redirect_with_message(string $type, string $message): void
 
 $mode = $_POST['mode'] ?? 'create';
 $courseId = trim($_POST['course_id'] ?? '');
-$category = trim($_POST['category'] ?? '');
-$subcategory = trim($_POST['subcategory'] ?? '');
+$categoryId = trim($_POST['category_id'] ?? '');
+$subcategoryId = trim($_POST['subcategory_id'] ?? '');
 $title = trim($_POST['title'] ?? '');
 $headline = trim($_POST['headline'] ?? '');
 $overview = trim($_POST['overview'] ?? '');
@@ -27,8 +27,8 @@ $contents = trim($_POST['contents'] ?? '');
 $details = trim($_POST['details'] ?? '');
 $pdfUrl = trim($_POST['pdf_url'] ?? '');
 
-if ($category === '' || $subcategory === '' || $title === '') {
-    redirect_with_message('admin_error', 'Indica pelo menos a categoria, subcategoria e título do curso.');
+if ($categoryId === '' || $subcategoryId === '' || $title === '') {
+    redirect_with_message('admin_error', 'Selecciona a categoria, subcategoria e indica o título do curso.');
 }
 
 if ($mode === 'update' && $courseId === '') {
@@ -37,6 +37,38 @@ if ($mode === 'update' && $courseId === '') {
 
 $data = load_data();
 $courses = $data['courses'] ?? [];
+$categories = $data['course_categories'] ?? [];
+$subcategories = $data['course_subcategories'] ?? [];
+
+$categoryName = '';
+foreach ($categories as $category) {
+    if (($category['id'] ?? '') === $categoryId) {
+        $categoryName = $category['name'] ?? '';
+        break;
+    }
+}
+
+if ($categoryName === '') {
+    redirect_with_message('admin_error', 'A categoria seleccionada já não existe. Actualiza a página e tenta novamente.');
+}
+
+$subcategoryName = '';
+$subcategoryCategoryId = '';
+foreach ($subcategories as $subcategory) {
+    if (($subcategory['id'] ?? '') === $subcategoryId) {
+        $subcategoryName = $subcategory['name'] ?? '';
+        $subcategoryCategoryId = $subcategory['category_id'] ?? '';
+        break;
+    }
+}
+
+if ($subcategoryName === '') {
+    redirect_with_message('admin_error', 'A subcategoria seleccionada já não existe. Actualiza a página e tenta novamente.');
+}
+
+if ($subcategoryCategoryId !== $categoryId) {
+    redirect_with_message('admin_error', 'A subcategoria escolhida não pertence à categoria seleccionada.');
+}
 
 $now = date('c');
 
@@ -44,8 +76,10 @@ if ($mode === 'update') {
     $updated = false;
     foreach ($courses as &$course) {
         if (($course['id'] ?? '') === $courseId) {
-            $course['category'] = $category;
-            $course['subcategory'] = $subcategory;
+            $course['category_id'] = $categoryId;
+            $course['subcategory_id'] = $subcategoryId;
+            $course['category'] = $categoryName;
+            $course['subcategory'] = $subcategoryName;
             $course['title'] = $title;
             $course['headline'] = $headline;
             $course['overview'] = $overview;
@@ -73,8 +107,10 @@ if ($mode === 'update') {
     $id = 'course-' . bin2hex(random_bytes(6));
     $courses[] = [
         'id' => $id,
-        'category' => $category,
-        'subcategory' => $subcategory,
+        'category_id' => $categoryId,
+        'subcategory_id' => $subcategoryId,
+        'category' => $categoryName,
+        'subcategory' => $subcategoryName,
         'title' => $title,
         'headline' => $headline,
         'overview' => $overview,

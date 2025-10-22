@@ -111,6 +111,22 @@
         margin-bottom: 10px;
       }
 
+      .courses-menu__category-block > .courses-menu__subcategories {
+        display: none;
+      }
+
+      .courses-menu__category-block.is-open > .courses-menu__subcategories {
+        display: block;
+      }
+
+      .courses-menu__subcategory-block > .courses-menu__course-list {
+        display: none;
+      }
+
+      .courses-menu__subcategory-block.is-open > .courses-menu__course-list {
+        display: block;
+      }
+
       .courses-menu__course-list li {
         margin: 4px 0;
       }
@@ -722,6 +738,10 @@
 
         let activeCourseId = '';
         let courses = [];
+        let courseCategories = [];
+        let courseSubcategories = [];
+        const categoryMap = new Map();
+        const subcategoryMap = new Map();
         let autoCloseTimeout = null;
 
         function escapeText(text) {
@@ -909,7 +929,24 @@
             categoryButton.className = 'courses-menu__category-toggle';
             categoryButton.textContent = category;
             categoryButton.addEventListener('click', () => {
-              categoryBlock.classList.toggle('is-open');
+              const willOpen = !categoryBlock.classList.contains('is-open');
+              if (willOpen) {
+                categoryBlock.classList.add('is-open');
+                const firstOpenSub = subWrapper.querySelector('.courses-menu__subcategory-block.is-open');
+                if (!firstOpenSub) {
+                  const firstSub = subWrapper.querySelector('.courses-menu__subcategory-block');
+                  if (firstSub) {
+                    firstSub.classList.add('is-open');
+                  }
+                }
+                const preferredCourseButton = categoryBlock.querySelector('.courses-menu__course-btn.is-active') || categoryBlock.querySelector('.courses-menu__course-btn');
+                if (preferredCourseButton) {
+                  setActiveCourse(preferredCourseButton.dataset.courseId);
+                }
+              } else {
+                categoryBlock.classList.remove('is-open');
+                subWrapper.querySelectorAll('.courses-menu__subcategory-block').forEach(block => block.classList.remove('is-open'));
+              }
             });
             categoryBlock.appendChild(categoryButton);
 
@@ -926,7 +963,21 @@
               subButton.className = 'courses-menu__subcategory-toggle';
               subButton.textContent = subcategory;
               subButton.addEventListener('click', () => {
+                const willOpen = !subBlock.classList.contains('is-open');
+                if (willOpen) {
+                  subWrapper.querySelectorAll('.courses-menu__subcategory-block').forEach(block => {
+                    if (block !== subBlock) {
+                      block.classList.remove('is-open');
+                    }
+                  });
+                }
                 subBlock.classList.toggle('is-open');
+                if (willOpen) {
+                  const firstCourseButton = subBlock.querySelector('.courses-menu__course-btn');
+                  if (firstCourseButton) {
+                    setActiveCourse(firstCourseButton.dataset.courseId);
+                  }
+                }
               });
 
               const list = document.createElement('ul');
@@ -1079,7 +1130,51 @@
         fetch('data/site-data.json', { cache: 'no-store' })
           .then(response => response.json())
           .then(data => {
-            courses = Array.isArray(data.courses) ? data.courses.slice() : [];
+            courseCategories = Array.isArray(data.course_categories) ? data.course_categories.slice() : [];
+            courseSubcategories = Array.isArray(data.course_subcategories) ? data.course_subcategories.slice() : [];
+
+            categoryMap.clear();
+            subcategoryMap.clear();
+
+            courseCategories.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt', { sensitivity: 'base' }));
+            courseCategories.forEach(category => {
+              if (category && category.id) {
+                categoryMap.set(category.id, category.name || '');
+              }
+            });
+
+            courseSubcategories.sort((a, b) => {
+              const categoryA = categoryMap.get(a.category_id || '') || '';
+              const categoryB = categoryMap.get(b.category_id || '') || '';
+              const categoryCompare = categoryA.localeCompare(categoryB, 'pt', { sensitivity: 'base' });
+              if (categoryCompare !== 0) {
+                return categoryCompare;
+              }
+              return (a.name || '').localeCompare(b.name || '', 'pt', { sensitivity: 'base' });
+            });
+
+            courseSubcategories.forEach(subcategory => {
+              if (subcategory && subcategory.id) {
+                subcategoryMap.set(subcategory.id, subcategory);
+              }
+            });
+
+            courses = Array.isArray(data.courses) ? data.courses.slice().map(course => {
+              const normalized = Object.assign({}, course);
+              const courseCategoryId = course.category_id || '';
+              const courseSubcategoryId = course.subcategory_id || '';
+              const mappedCategory = categoryMap.get(courseCategoryId) || course.category || '';
+              const mappedSubcategoryEntry = subcategoryMap.get(courseSubcategoryId);
+              const mappedSubcategory = mappedSubcategoryEntry ? (mappedSubcategoryEntry.name || '') : (course.subcategory || '');
+
+              normalized.category_id = courseCategoryId;
+              normalized.subcategory_id = courseSubcategoryId;
+              normalized.category = mappedCategory || 'Outros Programas';
+              normalized.subcategory = mappedSubcategory || 'Geral';
+
+              return normalized;
+            }) : [];
+
             courses.sort((a, b) => {
               const categoryCompare = (a.category || '').localeCompare(b.category || '', 'pt', { sensitivity: 'base' });
               if (categoryCompare !== 0) {

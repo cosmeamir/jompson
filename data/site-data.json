@@ -42,9 +42,43 @@
             "content": "📊 Impactos na Contabilidade das Empresas\r\nA adoção do novo regime de facturação eletrónica traz mudanças profundas para a contabilidade das empresas angolanas:\r\n- Integração Digital: Os sistemas de facturação eletrónica devem ser integrados aos sistemas de contabilidade, facilitando o registo automático das operações e reduzindo erros manuais;\r\n- Maior Rigor e Transparência: A transmissão em tempo real das facturas à AGT exige que os lançamentos contabilísticos sejam feitos de forma rigorosa e tempestiva, aumentando a transparência e a rastreabilidade das operações;\r\n- Arquivo Digital: As empresas passam a ser obrigadas a manter o arquivo digital das facturas e documentos fiscais, o que pode garantir fácil acesso e consulta imediata em caso de fiscalização tributária;\r\n- Obrigações de Comunicação: É necessário comunicar à AGT as séries de facturação criadas no software, ficheiros SAFT e inventários, o que exige maior organização e disciplina nos processos da contabilidade;\r\n- Redução de Custos e Riscos: A digitalização reduz custos com papel, tinteiros, toners, impressão e espaços para arquivo físico, além de minimizar riscos de extravio, fraude ou perda de documentos;\r\n- Preparação para Auditorias: Com a digitalização e integração dos dados, as auditorias fiscais e financeira tornar-se-ão mais rápidas e eficientes, pois a informação estará centralizada e facilmente acessível.\r\n\r\n📄 Novos Tipos de Documentos e Regras Específicas\r\nO novo regime introduz documentos e regras que visam maior precisão e rastreabilidade:\r\nFactura de Adiantamento: Para registar pagamentos antecipados.\r\nRepasse de Despesas: Exige emissão de factura com IVA ou nota de débito, conforme o caso.\r\nVales de Finalidade Múltipla: Devem ser acompanhados por nota de débito no carregamento e factura com IVA na utilização.\r\nAlém disso, todas as séries de facturação, softwares utilizados e ficheiros SAFT devem ser comunicados à AGT, com prazos definidos para envio de inventários e relatórios.\r\n\r\n🎁 Factura Premiada: Incentivo à Formalização\r\nPara promover a adesão ao novo regime, o governo criou o programa “Factura Premiada”, que sorteia prémios entre cidadãos que exigirem facturas com NIF. Uma medida que visa combater a informalidade e aumentar a arrecadação fiscal.\r\n\r\n⚠️ Penalidades e Fiscalização\r\nA não conformidade com o novo regime pode resultar em multas de até 7% do valor da operação, podendo chegar a 15% em caso de reincidência. Isso reforça a importância de uma transição cuidadosa e bem planejada.\r\n\r\n✅ Como Preparar Sua Empresa\r\nVerifique se está enquadrado na primeira fase (Grandes Contribuintes ou fornecedor do Estado).\r\nAdquira ou atualize seu software de facturação, garantindo que seja validado pela AGT.\r\nCapacite sua equipa sobre os novos tipos de documentos e regras de emissão.\r\nImplemente processos de arquivo digital e comunicação periódica com a AGT.\r\nParticipe do programa Factura Premiada, incentivando clientes a exigirem facturas com seu NIF.\r\n\r\n📌 Conclusão\r\nO novo regime de facturação é mais do que uma obrigação legal — é uma oportunidade para empresas se tornarem mais eficientes, transparentes e competitivas. A transição exige atenção, mas os benefícios são claros: maior controle, redução de riscos fiscais e alinhamento com as melhores práticas internacionais.\r\nSe você é empresário, gestor financeiro ou profissional da área de contabilidade e fiscalidade, este é o momento de agir. Prepare sua empresa, actualize seus sistemas e esteja pronto para a nova era da facturação."
         }
     ],
+    "course_categories": [
+        {
+            "id": "cat-formacao-executiva",
+            "name": "Formação Executiva",
+            "created_at": "2025-10-22T14:50:03Z"
+        },
+        {
+            "id": "cat-programas-corporativos",
+            "name": "Programas Corporativos",
+            "created_at": "2025-10-22T14:50:03Z"
+        }
+    ],
+    "course_subcategories": [
+        {
+            "id": "sub-financas-contabilidade",
+            "category_id": "cat-formacao-executiva",
+            "name": "Finanças & Contabilidade",
+            "created_at": "2025-10-22T14:50:03Z"
+        },
+        {
+            "id": "sub-gestao-contratos",
+            "category_id": "cat-formacao-executiva",
+            "name": "Gestão Pública & Contratos",
+            "created_at": "2025-10-22T14:50:03Z"
+        },
+        {
+            "id": "sub-financas-publicas",
+            "category_id": "cat-programas-corporativos",
+            "name": "Finanças Públicas",
+            "created_at": "2025-10-22T14:50:03Z"
+        }
+    ],
     "courses": [
         {
             "id": "course-ias-ifrs",
+            "category_id": "cat-formacao-executiva",
+            "subcategory_id": "sub-financas-contabilidade",
             "category": "Formação Executiva",
             "subcategory": "Finanças & Contabilidade",
             "title": "A Aplicabilidade das IAS/IFRS nos Registos Contabilísticos",
@@ -60,6 +94,8 @@
         },
         {
             "id": "course-negociacao-contratos",
+            "category_id": "cat-formacao-executiva",
+            "subcategory_id": "sub-gestao-contratos",
             "category": "Formação Executiva",
             "subcategory": "Gestão Pública & Contratos",
             "title": "Elaboração e Técnicas de Negociação de Contratos",
@@ -75,6 +111,8 @@
         },
         {
             "id": "course-gestao-publica",
+            "category_id": "cat-programas-corporativos",
+            "subcategory_id": "sub-financas-publicas",
             "category": "Programas Corporativos",
             "subcategory": "Finanças Públicas",
             "title": "Gestão Financeira no Sector Público",

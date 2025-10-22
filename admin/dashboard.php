@@ -10,6 +10,78 @@ $stats = array_merge([
 $blogs = $data['blogs'];
 $courses = $data['courses'];
 $courseRegistrations = $data['course_registrations'];
+$courseCategories = $data['course_categories'] ?? [];
+$courseSubcategories = $data['course_subcategories'] ?? [];
+
+usort($courseCategories, static function (array $a, array $b): int {
+    return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
+});
+
+$categoryMap = [];
+foreach ($courseCategories as $category) {
+    if (!isset($category['id'])) {
+        continue;
+    }
+    $categoryMap[$category['id']] = $category['name'] ?? '';
+}
+
+usort($courseSubcategories, static function (array $a, array $b) use ($categoryMap): int {
+    $categoryA = $categoryMap[$a['category_id'] ?? ''] ?? '';
+    $categoryB = $categoryMap[$b['category_id'] ?? ''] ?? '';
+    $categoryComparison = strcasecmp($categoryA, $categoryB);
+    if ($categoryComparison !== 0) {
+        return $categoryComparison;
+    }
+
+    return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
+});
+
+$subcategoryMap = [];
+$subcategoriesByCategory = [];
+foreach ($courseSubcategories as $subcategory) {
+    if (!isset($subcategory['id'])) {
+        continue;
+    }
+    $subcategoryMap[$subcategory['id']] = $subcategory;
+    $categoryId = $subcategory['category_id'] ?? '';
+    if (!isset($subcategoriesByCategory[$categoryId])) {
+        $subcategoriesByCategory[$categoryId] = [];
+    }
+    $subcategoriesByCategory[$categoryId][] = $subcategory;
+}
+
+foreach ($courses as &$course) {
+    $categoryId = $course['category_id'] ?? '';
+    if ($categoryId !== '' && isset($categoryMap[$categoryId])) {
+        $course['category'] = $categoryMap[$categoryId];
+    }
+
+    $subcategoryId = $course['subcategory_id'] ?? '';
+    if ($subcategoryId !== '' && isset($subcategoryMap[$subcategoryId])) {
+        $course['subcategory'] = $subcategoryMap[$subcategoryId]['name'] ?? '';
+    }
+}
+unset($course);
+
+$categoryCourseCounts = [];
+$subcategoryCourseCounts = [];
+foreach ($courses as $courseEntry) {
+    $categoryId = $courseEntry['category_id'] ?? '';
+    if ($categoryId !== '') {
+        if (!isset($categoryCourseCounts[$categoryId])) {
+            $categoryCourseCounts[$categoryId] = 0;
+        }
+        $categoryCourseCounts[$categoryId]++;
+    }
+
+    $subcategoryId = $courseEntry['subcategory_id'] ?? '';
+    if ($subcategoryId !== '') {
+        if (!isset($subcategoryCourseCounts[$subcategoryId])) {
+            $subcategoryCourseCounts[$subcategoryId] = 0;
+        }
+        $subcategoryCourseCounts[$subcategoryId]++;
+    }
+}
 
 usort($courses, static function (array $a, array $b): int {
     $categoryComparison = strcasecmp($a['category'] ?? '', $b['category'] ?? '');
@@ -346,6 +418,10 @@ function admin_asset(string $path): string
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         }
 
+        .course-admin-grid + .course-admin-grid {
+            margin-top: 26px;
+        }
+
         .course-admin-grid .module-card header {
             margin-bottom: 22px;
         }
@@ -363,6 +439,48 @@ function admin_asset(string $path): string
         .course-list {
             width: 100%;
             border-collapse: collapse;
+        }
+
+        .course-taxonomy-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .course-taxonomy-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
+        .course-taxonomy-list li:last-child {
+            border-bottom: none;
+        }
+
+        .course-taxonomy-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .course-taxonomy-actions form {
+            display: inline-block;
+            margin: 0;
+        }
+
+        .course-taxonomy-empty {
+            padding: 16px;
+            border-radius: 12px;
+            background: var(--surface-alt);
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .course-taxonomy-count {
+            font-size: 13px;
+            color: var(--text-muted);
         }
 
         .course-list thead {
@@ -706,6 +824,107 @@ function admin_asset(string $path): string
             <div class="course-admin-grid">
                 <section class="module-card">
                     <header>
+                        <h2>Gerir categorias</h2>
+                        <span>Cria categorias para organizar os programas disponibilizados.</span>
+                    </header>
+                    <form class="mb-4" method="post" action="save_course_category.php">
+                        <input type="hidden" name="mode" value="create">
+                        <div class="form-group">
+                            <label for="new-course-category">Nova categoria</label>
+                            <input type="text" class="form-control" id="new-course-category" name="name" placeholder="Formação Executiva" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Adicionar categoria</button>
+                    </form>
+                    <?php if (empty($courseCategories)): ?>
+                        <div class="course-taxonomy-empty">Ainda não existem categorias registadas.</div>
+                    <?php else: ?>
+                        <ul class="course-taxonomy-list">
+                            <?php foreach ($courseCategories as $category): ?>
+                                <?php
+                                    $categoryId = $category['id'] ?? '';
+                                    $categoryName = $category['name'] ?? '—';
+                                    $subCount = isset($subcategoriesByCategory[$categoryId]) ? count($subcategoriesByCategory[$categoryId]) : 0;
+                                    $courseCount = $categoryCourseCounts[$categoryId] ?? 0;
+                                    $canDeleteCategory = $categoryId !== '' && $subCount === 0 && $courseCount === 0;
+                                ?>
+                                <li>
+                                    <div class="course-taxonomy-meta">
+                                        <span class="course-badge"><?php echo htmlspecialchars($categoryName, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span class="course-taxonomy-count"><?php echo htmlspecialchars($subCount . ' subcat. • ' . $courseCount . ' cursos', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </div>
+                                    <div class="course-taxonomy-actions">
+                                        <form method="post" action="delete_course_category.php" onsubmit="return <?php echo $canDeleteCategory ? 'confirm(\'Eliminar esta categoria?\')' : 'false'; ?>;">
+                                            <input type="hidden" name="category_id" value="<?php echo htmlspecialchars($categoryId, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" <?php echo $canDeleteCategory ? '' : 'disabled'; ?>>Eliminar</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                    <p class="small text-muted mt-3">Elimina primeiro as subcategorias e cursos associados antes de remover uma categoria.</p>
+                </section>
+                <section class="module-card">
+                    <header>
+                        <h2>Gerir subcategorias</h2>
+                        <span>Organiza os cursos dentro das respectivas categorias.</span>
+                    </header>
+                    <?php if (empty($courseCategories)): ?>
+                        <div class="course-taxonomy-empty">Cria uma categoria antes de adicionar subcategorias.</div>
+                    <?php else: ?>
+                        <form class="mb-4" method="post" action="save_course_subcategory.php">
+                            <input type="hidden" name="mode" value="create">
+                            <div class="form-group">
+                                <label for="new-subcategory-category">Categoria</label>
+                                <select class="form-control" id="new-subcategory-category" name="category_id" required>
+                                    <option value="" disabled selected>Selecciona uma categoria</option>
+                                    <?php foreach ($courseCategories as $category): ?>
+                                        <option value="<?php echo htmlspecialchars($category['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($category['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-course-subcategory">Nova subcategoria</label>
+                                <input type="text" class="form-control" id="new-course-subcategory" name="name" placeholder="Finanças &amp; Contabilidade" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Adicionar subcategoria</button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if (empty($courseSubcategories)): ?>
+                        <div class="course-taxonomy-empty">Ainda não existem subcategorias registadas.</div>
+                    <?php else: ?>
+                        <ul class="course-taxonomy-list">
+                            <?php foreach ($courseSubcategories as $subcategory): ?>
+                                <?php
+                                    $subcategoryId = $subcategory['id'] ?? '';
+                                    $subcategoryName = $subcategory['name'] ?? '—';
+                                    $parentCategoryId = $subcategory['category_id'] ?? '';
+                                    $parentCategoryName = $categoryMap[$parentCategoryId] ?? '—';
+                                    $subcategoryCourseCount = $subcategoryCourseCounts[$subcategoryId] ?? 0;
+                                    $canDeleteSubcategory = $subcategoryId !== '' && $subcategoryCourseCount === 0;
+                                ?>
+                                <li>
+                                    <div class="course-taxonomy-meta">
+                                        <span class="course-badge"><?php echo htmlspecialchars($parentCategoryName, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span class="course-badge"><?php echo htmlspecialchars($subcategoryName, ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span class="course-taxonomy-count"><?php echo htmlspecialchars($subcategoryCourseCount . ' cursos', ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </div>
+                                    <div class="course-taxonomy-actions">
+                                        <form method="post" action="delete_course_subcategory.php" onsubmit="return <?php echo $canDeleteSubcategory ? 'confirm(\'Eliminar esta subcategoria?\')' : 'false'; ?>;">
+                                            <input type="hidden" name="subcategory_id" value="<?php echo htmlspecialchars($subcategoryId, ENT_QUOTES, 'UTF-8'); ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" <?php echo $canDeleteSubcategory ? '' : 'disabled'; ?>>Eliminar</button>
+                                        </form>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                    <p class="small text-muted mt-3">Remove os cursos associados antes de eliminar uma subcategoria.</p>
+                </section>
+            </div>
+            <div class="course-admin-grid">
+                <section class="module-card">
+                    <header>
                         <h2 id="course-form-title">Adicionar curso</h2>
                         <span>Actualize categorias, subcategorias e conteúdos apresentados no site.</span>
                     </header>
@@ -715,11 +934,21 @@ function admin_asset(string $path): string
                         <p class="text-muted small" id="course-form-helper">Preenche os campos para adicionar um novo curso ao catálogo.</p>
                         <div class="form-group">
                             <label for="course-category">Categoria</label>
-                            <input type="text" class="form-control" id="course-category" name="category" placeholder="Formação Executiva" required>
+                            <select class="form-control" id="course-category" name="category_id" required>
+                                <option value="">Selecciona uma categoria</option>
+                                <?php foreach ($courseCategories as $category): ?>
+                                    <option value="<?php echo htmlspecialchars($category['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($category['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="course-subcategory">Subcategoria</label>
-                            <input type="text" class="form-control" id="course-subcategory" name="subcategory" placeholder="Finanças &amp; Contabilidade" required>
+                            <select class="form-control" id="course-subcategory" name="subcategory_id" required>
+                                <option value="">Selecciona uma subcategoria</option>
+                                <?php foreach ($courseSubcategories as $subcategory): ?>
+                                    <option value="<?php echo htmlspecialchars($subcategory['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" data-category="<?php echo htmlspecialchars($subcategory['category_id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($subcategory['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="course-title">Título do curso</label>
@@ -825,6 +1054,7 @@ function admin_asset(string $path): string
                     <?php endif; ?>
                 </section>
             </div>
+            <div id="course-taxonomy-data" data-categories="<?php echo htmlspecialchars(json_encode($courseCategories, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>" data-subcategories="<?php echo htmlspecialchars(json_encode($courseSubcategories, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>" hidden></div>
         </section>
 
         <section id="inscricoes" class="content-section">
@@ -998,10 +1228,119 @@ function admin_asset(string $path): string
         var title = document.getElementById('course-form-title');
         var submitButton = document.getElementById('course-submit');
         var resetButton = document.getElementById('course-reset');
+        var categorySelect = document.getElementById('course-category');
+        var subcategorySelect = document.getElementById('course-subcategory');
+        var taxonomyData = document.getElementById('course-taxonomy-data');
 
-        var fieldMap = {
-            category: document.getElementById('course-category'),
-            subcategory: document.getElementById('course-subcategory'),
+        var categoriesData = [];
+        var subcategoriesData = [];
+
+        if (taxonomyData) {
+            try {
+                categoriesData = JSON.parse(taxonomyData.getAttribute('data-categories') || '[]') || [];
+            } catch (error) {
+                categoriesData = [];
+            }
+
+            try {
+                subcategoriesData = JSON.parse(taxonomyData.getAttribute('data-subcategories') || '[]') || [];
+            } catch (error) {
+                subcategoriesData = [];
+            }
+        }
+
+        function sortByName(a, b) {
+            return (a.name || '').localeCompare(b.name || '', 'pt', { sensitivity: 'base' });
+        }
+
+        categoriesData.sort(sortByName);
+        subcategoriesData.sort(function (a, b) {
+            var categoryCompare = (a.category_id || '').localeCompare(b.category_id || '', 'pt', { sensitivity: 'base' });
+            if (categoryCompare !== 0) {
+                return categoryCompare;
+            }
+            return sortByName(a, b);
+        });
+
+        function renderCategoryOptions(selectedId) {
+            if (!categorySelect) {
+                return;
+            }
+
+            categorySelect.innerHTML = '';
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = categoriesData.length ? 'Selecciona uma categoria' : 'Nenhuma categoria disponível';
+            placeholder.disabled = categoriesData.length === 0;
+            placeholder.selected = true;
+            categorySelect.appendChild(placeholder);
+
+            categoriesData.forEach(function (category) {
+                var option = document.createElement('option');
+                option.value = category.id || '';
+                option.textContent = category.name || '—';
+                if (category.id === selectedId) {
+                    option.selected = true;
+                    placeholder.selected = false;
+                }
+                categorySelect.appendChild(option);
+            });
+
+            categorySelect.disabled = categoriesData.length === 0;
+            if (selectedId && categorySelect.value !== selectedId) {
+                categorySelect.value = selectedId;
+            }
+        }
+
+        function renderSubcategoryOptions(categoryId, selectedId) {
+            if (!subcategorySelect) {
+                return;
+            }
+
+            subcategorySelect.innerHTML = '';
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = categoryId ? 'Selecciona uma subcategoria' : 'Selecciona uma categoria primeiro';
+            placeholder.disabled = !!categoryId;
+            placeholder.selected = true;
+            subcategorySelect.appendChild(placeholder);
+
+            if (!categoryId) {
+                subcategorySelect.disabled = true;
+                return;
+            }
+
+            var filtered = subcategoriesData.filter(function (item) {
+                return (item.category_id || '') === categoryId;
+            });
+
+            filtered.forEach(function (subcategory) {
+                var option = document.createElement('option');
+                option.value = subcategory.id || '';
+                option.textContent = subcategory.name || '—';
+                if (subcategory.id === selectedId) {
+                    option.selected = true;
+                    placeholder.selected = false;
+                }
+                subcategorySelect.appendChild(option);
+            });
+
+            subcategorySelect.disabled = filtered.length === 0;
+            if (selectedId && subcategorySelect.value !== selectedId) {
+                subcategorySelect.value = selectedId;
+            }
+        }
+
+        renderCategoryOptions('');
+        renderSubcategoryOptions('', '');
+
+        if (categorySelect) {
+            categorySelect.addEventListener('change', function () {
+                renderSubcategoryOptions(categorySelect.value, '');
+            });
+        }
+
+        var textFields = {
             title: document.getElementById('course-title'),
             headline: document.getElementById('course-headline'),
             overview: document.getElementById('course-overview'),
@@ -1015,14 +1354,26 @@ function admin_asset(string $path): string
         function setMode(mode) {
             if (mode === 'update') {
                 modeInput.value = 'update';
-                submitButton.textContent = 'Actualizar curso';
-                helper.textContent = 'Edita a informação do curso seleccionado e guarda para actualizar no site.';
-                title.textContent = 'Editar curso';
+                if (submitButton) {
+                    submitButton.textContent = 'Actualizar curso';
+                }
+                if (helper) {
+                    helper.textContent = 'Edita a informação do curso seleccionado e guarda para actualizar no site.';
+                }
+                if (title) {
+                    title.textContent = 'Editar curso';
+                }
             } else {
                 modeInput.value = 'create';
-                submitButton.textContent = 'Guardar curso';
-                helper.textContent = 'Preenche os campos para adicionar um novo curso ao catálogo.';
-                title.textContent = 'Adicionar curso';
+                if (submitButton) {
+                    submitButton.textContent = 'Guardar curso';
+                }
+                if (helper) {
+                    helper.textContent = 'Preenche os campos para adicionar um novo curso ao catálogo.';
+                }
+                if (title) {
+                    title.textContent = 'Adicionar curso';
+                }
                 idInput.value = '';
             }
         }
@@ -1033,8 +1384,10 @@ function admin_asset(string $path): string
             resetButton.addEventListener('click', function () {
                 courseForm.reset();
                 setMode('create');
-                if (fieldMap.category) {
-                    fieldMap.category.focus();
+                renderCategoryOptions('');
+                renderSubcategoryOptions('', '');
+                if (categorySelect && !categorySelect.disabled) {
+                    categorySelect.focus();
                 }
             });
         }
@@ -1050,13 +1403,19 @@ function admin_asset(string $path): string
                     var course = JSON.parse(payload);
                     setMode('update');
                     idInput.value = course.id || '';
-                    Object.keys(fieldMap).forEach(function (key) {
-                        if (Object.prototype.hasOwnProperty.call(fieldMap, key) && fieldMap[key]) {
-                            fieldMap[key].value = course[key] ? course[key] : '';
+
+                    var categoryId = course.category_id || '';
+                    renderCategoryOptions(categoryId);
+                    renderSubcategoryOptions(categoryId, course.subcategory_id || '');
+
+                    Object.keys(textFields).forEach(function (key) {
+                        if (Object.prototype.hasOwnProperty.call(textFields, key) && textFields[key]) {
+                            textFields[key].value = course[key] ? course[key] : '';
                         }
                     });
-                    if (fieldMap.category) {
-                        fieldMap.category.focus();
+
+                    if (categorySelect && !categorySelect.disabled) {
+                        categorySelect.focus();
                     }
                 } catch (error) {
                     console.error('Não foi possível carregar os dados do curso selecionado.', error);
