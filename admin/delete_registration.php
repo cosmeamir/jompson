@@ -18,9 +18,15 @@ if ($registrationId === '') {
 $data = load_data();
 $registrations = $data['course_registrations'] ?? [];
 
+$removedProof = null;
 $initialCount = count($registrations);
-$registrations = array_values(array_filter($registrations, static function (array $registration) use ($registrationId) {
-    return ($registration['id'] ?? '') !== $registrationId;
+$registrations = array_values(array_filter($registrations, function (array $registration) use ($registrationId, &$removedProof) {
+    if (($registration['id'] ?? '') === $registrationId) {
+        $removedProof = $registration['comprovativo'] ?? null;
+        return false;
+    }
+
+    return true;
 }));
 
 if ($initialCount === count($registrations)) {
@@ -28,6 +34,12 @@ if ($initialCount === count($registrations)) {
 } else {
     $data['course_registrations'] = $registrations;
     save_data($data);
+    if ($removedProof) {
+        $filePath = dirname(__DIR__) . '/' . ltrim($removedProof, '/');
+        if (is_file($filePath)) {
+            @unlink($filePath);
+        }
+    }
     $_SESSION['admin_success'] = 'Inscrição removida com sucesso.';
 }
 

@@ -156,121 +156,158 @@ function admin_asset(string $path): string
 
         .dashboard-shell {
             display: flex;
+            flex-direction: column;
             min-height: 100vh;
         }
 
-        .dashboard-sidebar {
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, #0f172a 0%, #1d4ed8 100%);
-            color: #f8fbff;
-            padding: 32px 26px 40px;
-            display: flex;
-            flex-direction: column;
+        .dashboard-header-shell {
             position: sticky;
             top: 0;
-            align-self: flex-start;
-            min-height: 100vh;
+            z-index: 1040;
+            backdrop-filter: blur(18px);
+            background: linear-gradient(160deg, rgba(15, 23, 42, 0.95) 0%, rgba(29, 78, 216, 0.85) 80%);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
         }
 
-        .sidebar-brand {
+        .dashboard-topbar {
             display: flex;
             align-items: center;
-            margin-bottom: 48px;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 26px clamp(20px, 5vw, 56px) 18px;
+            color: #f8fbff;
         }
 
-        .sidebar-brand .brand-logo {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-brand .brand-logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.16);
             font-size: 20px;
-            margin-right: 12px;
         }
 
-        .sidebar-brand strong {
-            font-size: 18px;
+        .topbar-brand strong {
+            font-size: 19px;
             letter-spacing: 0.02em;
         }
 
-        .sidebar-nav {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            flex: 1;
-        }
-
-        .sidebar-nav li {
-            margin-bottom: 8px;
-        }
-
-        .sidebar-nav a {
+        .topbar-actions {
             display: flex;
             align-items: center;
-            padding: 12px 14px;
-            border-radius: 12px;
-            text-decoration: none;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .topbar-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.35);
             color: inherit;
+            text-decoration: none;
             font-weight: 500;
             transition: background 0.2s ease, transform 0.2s ease;
         }
 
-        .sidebar-nav a i {
-            margin-right: 12px;
-            font-size: 18px;
-        }
-
-        .sidebar-nav a:hover,
-        .sidebar-nav a.active {
-            background: rgba(255, 255, 255, 0.16);
-            transform: translateX(4px);
-        }
-
-        .sidebar-footer {
-            margin-top: 40px;
-            padding: 16px;
-            background: rgba(15, 23, 42, 0.35);
-            border-radius: 14px;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .dashboard-main {
-            flex: 1;
-            padding: 42px clamp(20px, 5vw, 56px);
-        }
-
-        .dashboard-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            gap: 16px;
-        }
-
-        .dashboard-header h1 {
-            font-size: clamp(24px, 3vw, 32px);
-            font-weight: 600;
-            margin: 0;
+        .topbar-link:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
         }
 
         .user-chip {
             display: inline-flex;
             align-items: center;
-            background: var(--surface);
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
             padding: 10px 16px;
             border-radius: 999px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
             font-weight: 500;
-            gap: 12px;
+            backdrop-filter: blur(6px);
         }
 
         .user-chip i {
-            color: var(--primary);
+            color: #f8fbff;
             font-size: 18px;
+        }
+
+        .btn-logout {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            border-radius: 999px;
+            background: #f8fafc;
+            color: #0f172a;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+        }
+
+        .dashboard-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 clamp(20px, 5vw, 56px) 18px;
+            background: rgba(248, 250, 252, 0.98);
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+            overflow-x: auto;
+        }
+
+        .dashboard-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dashboard-nav a i {
+            font-size: 16px;
+        }
+
+        .dashboard-nav a:hover,
+        .dashboard-nav a.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 14px 24px rgba(37, 99, 235, 0.25);
+        }
+
+        .dashboard-main {
+            flex: 1;
+            padding: 40px clamp(20px, 5vw, 56px) 60px;
+        }
+
+        .welcome-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 32px;
+        }
+
+        .welcome-banner h1 {
+            font-size: clamp(26px, 3vw, 34px);
+            font-weight: 600;
+            margin: 0;
         }
 
         .metric-grid {
@@ -327,6 +364,16 @@ function admin_asset(string $path): string
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 28px;
             margin-bottom: 48px;
+        }
+
+        .content-section--single {
+            display: block;
+        }
+
+        .alert-stack {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 36px;
         }
 
         .module-card {
@@ -611,46 +658,41 @@ function admin_asset(string $path): string
         }
 
         @media (max-width: 992px) {
-            .dashboard-shell {
+            .dashboard-topbar {
                 flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
             }
 
-            .dashboard-sidebar {
+            .topbar-actions {
                 width: 100%;
-                flex-direction: row;
-                align-items: center;
                 justify-content: space-between;
-                padding: 20px clamp(18px, 5vw, 28px);
-                border-bottom-left-radius: 24px;
-                border-bottom-right-radius: 24px;
-                min-height: auto;
-                position: sticky;
-                top: 0;
-                z-index: 1020;
             }
 
-            .sidebar-brand {
-                margin-bottom: 0;
-            }
-
-            .sidebar-nav {
-                display: flex;
-                gap: 8px;
-                margin-left: 20px;
-            }
-
-            .sidebar-nav li {
-                margin-bottom: 0;
-            }
-
-            .sidebar-footer {
-                display: none;
+            .dashboard-nav {
+                flex-wrap: wrap;
+                row-gap: 10px;
             }
         }
 
         @media (max-width: 576px) {
             .dashboard-main {
                 padding: 28px 18px 48px;
+            }
+
+            .dashboard-topbar {
+                padding: 22px 18px 16px;
+            }
+
+            .topbar-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .dashboard-nav {
+                padding: 0 18px 16px;
+                gap: 8px;
             }
 
             .module-card {
@@ -667,97 +709,110 @@ function admin_asset(string $path): string
 </head>
 <body>
 <div class="dashboard-shell">
-    <aside class="dashboard-sidebar">
-        <div class="sidebar-brand">
-            <span class="brand-logo"><i class="bi bi-lightning-charge"></i></span>
-            <div>
-                <strong>Jompson Admin</strong><br>
-                <small>Painel de controlo</small>
+    <header class="dashboard-header-shell">
+        <div class="dashboard-topbar">
+            <div class="topbar-brand">
+                <span class="brand-logo"><i class="bi bi-lightning-charge"></i></span>
+                <div>
+                    <strong>Jompson Admin</strong><br>
+                    <small>Painel de controlo</small>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <a class="topbar-link" href="../index.html" target="_blank" rel="noopener">
+                    <i class="bi bi-globe2"></i>
+                    Ver site
+                </a>
+                <div class="user-chip">
+                    <i class="bi bi-person-circle"></i>
+                    <span>Administrador</span>
+                </div>
+                <a class="btn-logout" href="logout.php">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Terminar sessão
+                </a>
             </div>
         </div>
-        <ul class="sidebar-nav">
-            <li><a class="active" href="dashboard.php"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
-            <li><a href="../index.html" target="_blank"><i class="bi bi-globe2"></i>Ver site</a></li>
-            <li><a href="#indicadores"><i class="bi bi-bar-chart"></i>Indicadores</a></li>
-            <li><a href="#courses"><i class="bi bi-mortarboard"></i>Cursos</a></li>
-            <li><a href="#inscricoes"><i class="bi bi-people"></i>Inscrições</a></li>
-            <li><a href="#blogs"><i class="bi bi-journal-text"></i>Blog</a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <div class="d-flex align-items-center mb-2"><i class="bi bi-shield-lock mr-2"></i> Sessão segura</div>
-            <a class="btn btn-outline-light btn-sm" href="logout.php">Terminar sessão</a>
-        </div>
-    </aside>
+        <nav class="dashboard-nav" id="dashboard-nav">
+            <a href="#overview" class="active"><i class="bi bi-speedometer2"></i>Visão Geral</a>
+            <a href="#indicadores"><i class="bi bi-bar-chart"></i>Indicadores</a>
+            <a href="#categorias"><i class="bi bi-diagram-3"></i>Categorias</a>
+            <a href="#subcategorias"><i class="bi bi-diagram-2"></i>Subcategorias</a>
+            <a href="#courses"><i class="bi bi-mortarboard"></i>Cursos</a>
+            <a href="#inscricoes"><i class="bi bi-people"></i>Inscrições</a>
+            <a href="#blogs"><i class="bi bi-journal-text"></i>Conteúdo</a>
+        </nav>
+    </header>
     <main class="dashboard-main">
-        <div class="dashboard-header">
-            <div>
-                <h1>Bem-vindo de volta 👋</h1>
-                <div class="text-muted">Acompanhe métricas, publique artigos e mantenha o site atualizado.</div>
+        <section id="overview" class="content-section content-section--single">
+            <div class="welcome-banner">
+                <div>
+                    <h1>Bem-vindo de volta 👋</h1>
+                    <p class="text-muted mb-0">Acompanhe métricas, publique artigos e mantenha o site atualizado.</p>
+                </div>
             </div>
-            <div class="user-chip">
-                <i class="bi bi-person-circle"></i>
-                <span>Administrador</span>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-briefcase"></i></div>
+                    <h3>Serviços</h3>
+                    <strong><?php echo number_format((int) $stats['services'], 0, ',', '.'); ?></strong>
+                    <span>Projetos concluídos</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-emoji-smile"></i></div>
+                    <h3>Clientes</h3>
+                    <strong><?php echo number_format((int) $stats['clients'], 0, ',', '.'); ?></strong>
+                    <span>Clientes satisfeitos</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-award"></i></div>
+                    <h3>Experiência</h3>
+                    <strong><?php echo number_format((int) $stats['experience'], 0, ',', '.'); ?>+</strong>
+                    <span>Anos dedicados</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-journal-richtext"></i></div>
+                    <h3>Artigos</h3>
+                    <strong><?php echo number_format(count($blogs), 0, ',', '.'); ?></strong>
+                    <span>Total publicados</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-mortarboard"></i></div>
+                    <h3>Cursos</h3>
+                    <strong><?php echo number_format(count($courses), 0, ',', '.'); ?></strong>
+                    <span>Disponíveis no site</span>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="bi bi-person-lines-fill"></i></div>
+                    <h3>Pré-inscrições</h3>
+                    <strong><?php echo number_format(count($courseRegistrations), 0, ',', '.'); ?></strong>
+                    <span>Contactos recebidos</span>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <div class="metric-grid">
-            <div class="metric-card">
-                <div class="metric-icon"><i class="bi bi-briefcase"></i></div>
-                <h3>Serviços</h3>
-                <strong><?php echo number_format((int) $stats['services'], 0, ',', '.'); ?></strong>
-                <span>Projetos concluídos</span>
-            </div>
-            <div class="metric-card">
-                <div class="metric-icon"><i class="bi bi-emoji-smile"></i></div>
-                <h3>Clientes</h3>
-                <strong><?php echo number_format((int) $stats['clients'], 0, ',', '.'); ?></strong>
-                <span>Clientes satisfeitos</span>
-            </div>
-            <div class="metric-card">
-                <div class="metric-icon"><i class="bi bi-award"></i></div>
-                <h3>Experiência</h3>
-                <strong><?php echo number_format((int) $stats['experience'], 0, ',', '.'); ?>+</strong>
-                <span>Anos dedicados</span>
-            </div>
-            <div class="metric-card">
-                <div class="metric-icon"><i class="bi bi-journal-richtext"></i></div>
-                <h3>Artigos</h3>
-                <strong><?php echo number_format(count($blogs), 0, ',', '.'); ?></strong>
-                <span>Total publicados</span>
-            </div>
-            <div class="metric-card">
-                <div class="metric-icon"><i class="bi bi-mortarboard"></i></div>
-                <h3>Cursos</h3>
-                <strong><?php echo number_format(count($courses), 0, ',', '.'); ?></strong>
-                <span>Disponíveis no site</span>
-            </div>
-            <div class="metric-card">
-                <div class="metric-icon"><i class="bi bi-person-lines-fill"></i></div>
-                <h3>Pré-inscrições</h3>
-                <strong><?php echo number_format(count($courseRegistrations), 0, ',', '.'); ?></strong>
-                <span>Contactos recebidos</span>
-            </div>
-        </div>
-
-        <?php if ($successMessage): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <strong>Sucesso!</strong> <?php echo htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8'); ?>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Fechar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+        <?php if ($successMessage || $errorMessage): ?>
+            <div class="alert-stack">
+                <?php if ($successMessage): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Sucesso!</strong> <?php echo htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8'); ?>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                <?php endif; ?>
+                <?php if ($errorMessage): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Ups!</strong> <?php echo htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8'); ?>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 
-        <?php if ($errorMessage): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Ups!</strong> <?php echo htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8'); ?>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Fechar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        <?php endif; ?>
-
-        <div id="indicadores" class="content-section">
+        <section id="indicadores" class="content-section">
             <section class="module-card">
                 <header>
                     <h2>Indicadores da página inicial</h2>
@@ -818,110 +873,114 @@ function admin_asset(string $path): string
                     <button type="submit" class="btn btn-success">Publicar artigo</button>
                 </form>
             </section>
-        </div>
+        </section>
 
-        <section id="courses" class="content-section">
-            <div class="course-admin-grid">
-                <section class="module-card">
-                    <header>
-                        <h2>Gerir categorias</h2>
-                        <span>Cria categorias para organizar os programas disponibilizados.</span>
-                    </header>
-                    <form class="mb-4" method="post" action="save_course_category.php">
+        <section id="categorias" class="content-section content-section--single">
+            <section class="module-card">
+                <header>
+                    <h2>Gerir categorias</h2>
+                    <span>Cria categorias para organizar os programas disponibilizados.</span>
+                </header>
+                <form class="mb-4" method="post" action="save_course_category.php">
+                    <input type="hidden" name="mode" value="create">
+                    <div class="form-group">
+                        <label for="new-course-category">Nova categoria</label>
+                        <input type="text" class="form-control" id="new-course-category" name="name" placeholder="Formação Executiva" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Adicionar categoria</button>
+                </form>
+                <?php if (empty($courseCategories)): ?>
+                    <div class="course-taxonomy-empty">Ainda não existem categorias registadas.</div>
+                <?php else: ?>
+                    <ul class="course-taxonomy-list">
+                        <?php foreach ($courseCategories as $category): ?>
+                            <?php
+                                $categoryId = $category['id'] ?? '';
+                                $categoryName = $category['name'] ?? '—';
+                                $subCount = isset($subcategoriesByCategory[$categoryId]) ? count($subcategoriesByCategory[$categoryId]) : 0;
+                                $courseCount = $categoryCourseCounts[$categoryId] ?? 0;
+                                $canDeleteCategory = $categoryId !== '' && $subCount === 0 && $courseCount === 0;
+                            ?>
+                            <li>
+                                <div class="course-taxonomy-meta">
+                                    <span class="course-badge"><?php echo htmlspecialchars($categoryName, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="course-taxonomy-count"><?php echo htmlspecialchars($subCount . ' subcat. •' . $courseCount . ' cursos', ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                                <div class="course-taxonomy-actions">
+                                    <form method="post" action="delete_course_category.php" onsubmit="return <?php echo $canDeleteCategory ? 'confirm(\'Eliminar esta categoria?\')' : 'false'; ?>;">
+                                        <input type="hidden" name="category_id" value="<?php echo htmlspecialchars($categoryId, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" <?php echo $canDeleteCategory ? '' : 'disabled'; ?>>Eliminar</button>
+                                    </form>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+                <p class="small text-muted mt-3">Elimina primeiro as subcategorias e cursos associados antes de remover uma categoria.</p>
+            </section>
+        </section>
+
+        <section id="subcategorias" class="content-section content-section--single">
+            <section class="module-card">
+                <header>
+                    <h2>Gerir subcategorias</h2>
+                    <span>Organiza os cursos dentro das respectivas categorias.</span>
+                </header>
+                <?php if (empty($courseCategories)): ?>
+                    <div class="course-taxonomy-empty">Cria uma categoria antes de adicionar subcategorias.</div>
+                <?php else: ?>
+                    <form class="mb-4" method="post" action="save_course_subcategory.php">
                         <input type="hidden" name="mode" value="create">
                         <div class="form-group">
-                            <label for="new-course-category">Nova categoria</label>
-                            <input type="text" class="form-control" id="new-course-category" name="name" placeholder="Formação Executiva" required>
+                            <label for="new-subcategory-category">Categoria</label>
+                            <select class="form-control" id="new-subcategory-category" name="category_id" required>
+                                <option value="" disabled selected>Selecciona uma categoria</option>
+                                <?php foreach ($courseCategories as $category): ?>
+                                    <option value="<?php echo htmlspecialchars($category['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($category['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-sm">Adicionar categoria</button>
+                        <div class="form-group">
+                            <label for="new-course-subcategory">Nova subcategoria</label>
+                            <input type="text" class="form-control" id="new-course-subcategory" name="name" placeholder="Finanças &amp; Contabilidade" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Adicionar subcategoria</button>
                     </form>
-                    <?php if (empty($courseCategories)): ?>
-                        <div class="course-taxonomy-empty">Ainda não existem categorias registadas.</div>
-                    <?php else: ?>
-                        <ul class="course-taxonomy-list">
-                            <?php foreach ($courseCategories as $category): ?>
-                                <?php
-                                    $categoryId = $category['id'] ?? '';
-                                    $categoryName = $category['name'] ?? '—';
-                                    $subCount = isset($subcategoriesByCategory[$categoryId]) ? count($subcategoriesByCategory[$categoryId]) : 0;
-                                    $courseCount = $categoryCourseCounts[$categoryId] ?? 0;
-                                    $canDeleteCategory = $categoryId !== '' && $subCount === 0 && $courseCount === 0;
-                                ?>
-                                <li>
-                                    <div class="course-taxonomy-meta">
-                                        <span class="course-badge"><?php echo htmlspecialchars($categoryName, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <span class="course-taxonomy-count"><?php echo htmlspecialchars($subCount . ' subcat. • ' . $courseCount . ' cursos', ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                    <div class="course-taxonomy-actions">
-                                        <form method="post" action="delete_course_category.php" onsubmit="return <?php echo $canDeleteCategory ? 'confirm(\'Eliminar esta categoria?\')' : 'false'; ?>;">
-                                            <input type="hidden" name="category_id" value="<?php echo htmlspecialchars($categoryId, ENT_QUOTES, 'UTF-8'); ?>">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" <?php echo $canDeleteCategory ? '' : 'disabled'; ?>>Eliminar</button>
-                                        </form>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                    <p class="small text-muted mt-3">Elimina primeiro as subcategorias e cursos associados antes de remover uma categoria.</p>
-                </section>
-                <section class="module-card">
-                    <header>
-                        <h2>Gerir subcategorias</h2>
-                        <span>Organiza os cursos dentro das respectivas categorias.</span>
-                    </header>
-                    <?php if (empty($courseCategories)): ?>
-                        <div class="course-taxonomy-empty">Cria uma categoria antes de adicionar subcategorias.</div>
-                    <?php else: ?>
-                        <form class="mb-4" method="post" action="save_course_subcategory.php">
-                            <input type="hidden" name="mode" value="create">
-                            <div class="form-group">
-                                <label for="new-subcategory-category">Categoria</label>
-                                <select class="form-control" id="new-subcategory-category" name="category_id" required>
-                                    <option value="" disabled selected>Selecciona uma categoria</option>
-                                    <?php foreach ($courseCategories as $category): ?>
-                                        <option value="<?php echo htmlspecialchars($category['id'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($category['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="new-course-subcategory">Nova subcategoria</label>
-                                <input type="text" class="form-control" id="new-course-subcategory" name="name" placeholder="Finanças &amp; Contabilidade" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-sm">Adicionar subcategoria</button>
-                        </form>
-                    <?php endif; ?>
-                    <?php if (empty($courseSubcategories)): ?>
-                        <div class="course-taxonomy-empty">Ainda não existem subcategorias registadas.</div>
-                    <?php else: ?>
-                        <ul class="course-taxonomy-list">
-                            <?php foreach ($courseSubcategories as $subcategory): ?>
-                                <?php
-                                    $subcategoryId = $subcategory['id'] ?? '';
-                                    $subcategoryName = $subcategory['name'] ?? '—';
-                                    $parentCategoryId = $subcategory['category_id'] ?? '';
-                                    $parentCategoryName = $categoryMap[$parentCategoryId] ?? '—';
-                                    $subcategoryCourseCount = $subcategoryCourseCounts[$subcategoryId] ?? 0;
-                                    $canDeleteSubcategory = $subcategoryId !== '' && $subcategoryCourseCount === 0;
-                                ?>
-                                <li>
-                                    <div class="course-taxonomy-meta">
-                                        <span class="course-badge"><?php echo htmlspecialchars($parentCategoryName, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <span class="course-badge"><?php echo htmlspecialchars($subcategoryName, ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <span class="course-taxonomy-count"><?php echo htmlspecialchars($subcategoryCourseCount . ' cursos', ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                    <div class="course-taxonomy-actions">
-                                        <form method="post" action="delete_course_subcategory.php" onsubmit="return <?php echo $canDeleteSubcategory ? 'confirm(\'Eliminar esta subcategoria?\')' : 'false'; ?>;">
-                                            <input type="hidden" name="subcategory_id" value="<?php echo htmlspecialchars($subcategoryId, ENT_QUOTES, 'UTF-8'); ?>">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" <?php echo $canDeleteSubcategory ? '' : 'disabled'; ?>>Eliminar</button>
-                                        </form>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                    <p class="small text-muted mt-3">Remove os cursos associados antes de eliminar uma subcategoria.</p>
-                </section>
-            </div>
+                <?php endif; ?>
+                <?php if (empty($courseSubcategories)): ?>
+                    <div class="course-taxonomy-empty">Ainda não existem subcategorias registadas.</div>
+                <?php else: ?>
+                    <ul class="course-taxonomy-list">
+                        <?php foreach ($courseSubcategories as $subcategory): ?>
+                            <?php
+                                $subcategoryId = $subcategory['id'] ?? '';
+                                $subcategoryName = $subcategory['name'] ?? '—';
+                                $parentCategoryId = $subcategory['category_id'] ?? '';
+                                $parentCategoryName = $categoryMap[$parentCategoryId] ?? '—';
+                                $subcategoryCourseCount = $subcategoryCourseCounts[$subcategoryId] ?? 0;
+                                $canDeleteSubcategory = $subcategoryId !== '' && $subcategoryCourseCount === 0;
+                            ?>
+                            <li>
+                                <div class="course-taxonomy-meta">
+                                    <span class="course-badge"><?php echo htmlspecialchars($parentCategoryName, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="course-badge"><?php echo htmlspecialchars($subcategoryName, ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="course-taxonomy-count"><?php echo htmlspecialchars($subcategoryCourseCount . ' cursos', ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                                <div class="course-taxonomy-actions">
+                                    <form method="post" action="delete_course_subcategory.php" onsubmit="return <?php echo $canDeleteSubcategory ? 'confirm(\'Eliminar esta subcategoria?\')' : 'false'; ?>;">
+                                        <input type="hidden" name="subcategory_id" value="<?php echo htmlspecialchars($subcategoryId, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" <?php echo $canDeleteSubcategory ? '' : 'disabled'; ?>>Eliminar</button>
+                                    </form>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+                <p class="small text-muted mt-3">Remove os cursos associados antes de eliminar uma subcategoria.</p>
+            </section>
+        </section>
+
+        <section id="courses" class="content-section content-section--single">
             <div class="course-admin-grid">
                 <section class="module-card">
                     <header>
@@ -956,12 +1015,15 @@ function admin_asset(string $path): string
                         </div>
                         <div class="form-group">
                             <label for="course-headline">Chamada curta</label>
-                            <input type="text" class="form-control" id="course-headline" name="headline" placeholder="Domine a negociação de contratos empresariais.">
-                            <small class="form-text text-muted">Um resumo breve que aparece junto ao título do curso.</small>
+                            <input type="text" class="form-control" id="course-headline" name="headline" placeholder="Domine a narrativa do programa em poucas palavras">
                         </div>
                         <div class="form-group">
-                            <label for="course-overview">Apresentação</label>
-                            <textarea class="form-control" id="course-overview" name="overview" rows="3" placeholder="Descreve o contexto, público-alvo e resultados esperados."></textarea>
+                            <label for="course-price">Preço do curso</label>
+                            <input type="text" class="form-control" id="course-price" name="price" placeholder="Ex.: 150.000 AOA" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="course-overview">Descrição geral</label>
+                            <textarea class="form-control" id="course-overview" name="overview" rows="4" placeholder="Apresenta o propósito e o diferencial do programa."></textarea>
                         </div>
                         <div class="form-group">
                             <label for="course-general-objectives">Objectivos gerais</label>
@@ -1008,6 +1070,7 @@ function admin_asset(string $path): string
                                         <th>Categoria</th>
                                         <th>Subcategoria</th>
                                         <th>Curso</th>
+                                        <th>Preço</th>
                                         <th>Actualização</th>
                                         <th class="text-right">Ações</th>
                                     </tr>
@@ -1026,6 +1089,7 @@ function admin_asset(string $path): string
                                                 }
                                             }
                                             $encodedCourse = htmlspecialchars(json_encode($course, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+                                            $coursePrice = $course['price'] ?? '—';
                                         ?>
                                         <tr>
                                             <td><span class="course-badge"><?php echo htmlspecialchars($course['category'], ENT_QUOTES, 'UTF-8'); ?></span></td>
@@ -1036,6 +1100,7 @@ function admin_asset(string $path): string
                                                     <div class="text-muted small mt-1"><?php echo htmlspecialchars($course['headline'], ENT_QUOTES, 'UTF-8'); ?></div>
                                                 <?php endif; ?>
                                             </td>
+                                            <td><?php echo htmlspecialchars($coursePrice, ENT_QUOTES, 'UTF-8'); ?></td>
                                             <td><?php echo htmlspecialchars($updatedDisplay, ENT_QUOTES, 'UTF-8'); ?></td>
                                             <td class="text-right">
                                                 <div class="course-actions">
@@ -1057,7 +1122,7 @@ function admin_asset(string $path): string
             <div id="course-taxonomy-data" data-categories="<?php echo htmlspecialchars(json_encode($courseCategories, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>" data-subcategories="<?php echo htmlspecialchars(json_encode($courseSubcategories, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>" hidden></div>
         </section>
 
-        <section id="inscricoes" class="content-section">
+        <section id="inscricoes" class="content-section content-section--single">
             <div class="module-card">
                 <header>
                     <h2>Pré-inscrições recebidas</h2>
@@ -1112,7 +1177,18 @@ function admin_asset(string $path): string
                                         </td>
                                         <td>
                                             <div><strong><?php echo htmlspecialchars($registration['curso'], ENT_QUOTES, 'UTF-8'); ?></strong></div>
+                                            <?php if (!empty($registration['course_price'])): ?>
+                                                <span class="registration-meta">Preço: <?php echo htmlspecialchars($registration['course_price'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($registration['course_id'])): ?>
+                                                <span class="registration-meta">ID: <?php echo htmlspecialchars($registration['course_id'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php endif; ?>
                                             <span class="registration-meta">Forma de pagamento: <?php echo htmlspecialchars($registration['forma_pagamento'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php if (!empty($registration['comprovativo'])): ?>
+                                                <div class="mt-2">
+                                                    <a class="btn btn-outline-primary btn-sm" href="<?php echo htmlspecialchars(admin_asset($registration['comprovativo']), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">Ver comprovativo</a>
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
                                         <td style="min-width: 220px;">
                                             <?php echo nl2br(htmlspecialchars($registration['mensagem'], ENT_QUOTES, 'UTF-8')); ?>
@@ -1133,12 +1209,13 @@ function admin_asset(string $path): string
             </div>
         </section>
 
-        <h2 id="blogs" class="section-title">Artigos publicados</h2>
-        <?php if (empty($blogs)): ?>
-            <div class="alert alert-info">Ainda não existem artigos publicados.</div>
-        <?php endif; ?>
-        <?php foreach ($blogs as $blog): ?>
-            <article class="card blog-card">
+        <section id="blogs" class="content-section content-section--single">
+            <h2 class="section-title">Artigos publicados</h2>
+            <?php if (empty($blogs)): ?>
+                <div class="alert alert-info">Ainda não existem artigos publicados.</div>
+            <?php endif; ?>
+            <?php foreach ($blogs as $blog): ?>
+                <article class="card blog-card">
                 <div class="card-body">
                     <h3><?php echo htmlspecialchars($blog['title'], ENT_QUOTES, 'UTF-8'); ?></h3>
                     <div class="blog-meta">
@@ -1209,14 +1286,37 @@ function admin_asset(string $path): string
                         </form>
                     </div>
                 </div>
-            </article>
-        <?php endforeach; ?>
+                </article>
+            <?php endforeach; ?>
+        </section>
     </main>
 </div>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        var navLinks = document.querySelectorAll('#dashboard-nav a');
+        function setActiveNav(hash) {
+            if (!hash) {
+                return;
+            }
+            navLinks.forEach(function (link) {
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        navLinks.forEach(function (link) {
+            link.addEventListener('click', function () {
+                setActiveNav(link.getAttribute('href'));
+            });
+        });
+
+        setActiveNav(window.location.hash || '#overview');
+
         var courseForm = document.getElementById('course-form');
         if (!courseForm) {
             return;
@@ -1343,6 +1443,7 @@ function admin_asset(string $path): string
         var textFields = {
             title: document.getElementById('course-title'),
             headline: document.getElementById('course-headline'),
+            price: document.getElementById('course-price'),
             overview: document.getElementById('course-overview'),
             general_objectives: document.getElementById('course-general-objectives'),
             specific_objectives: document.getElementById('course-specific-objectives'),

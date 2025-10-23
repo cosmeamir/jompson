@@ -197,6 +197,19 @@
         color: #475569;
       }
 
+      .course-price-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: var(--courses-primary-soft);
+        color: var(--courses-primary);
+        font-weight: 700;
+        font-size: 15px;
+        margin-top: 12px;
+      }
+
       .course-detail-columns {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
@@ -235,6 +248,31 @@
         border-radius: 18px;
         padding: 20px 22px;
         border: 1px solid var(--courses-border);
+      }
+
+      .course-detail-side .course-price-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: rgba(201, 24, 74, 0.12);
+        color: var(--courses-primary);
+        font-weight: 600;
+        margin-bottom: 18px;
+      }
+
+      .course-detail-side .course-price-chip strong {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #9f1239;
+      }
+
+      .course-detail-side .course-price-chip span {
+        font-size: 16px;
+        font-weight: 700;
+        color: #b91c1c;
       }
 
       .course-detail-side h4 {
@@ -361,6 +399,13 @@
       .course-form-card button[type="submit"]:hover {
         transform: translateY(-2px);
         box-shadow: 0 18px 30px rgba(201, 24, 74, 0.3);
+      }
+
+      .course-form-card .form-help {
+        display: block;
+        font-size: 13px;
+        color: #6b7285;
+        margin-top: 6px;
       }
 
       .form-status {
@@ -568,7 +613,9 @@
             <section class="course-form-card" id="course-form-card">
               <h3>Formulário de Pré-inscrição</h3>
               <p>Preenche os teus dados para reservar vaga. Entraremos em contacto para confirmar a inscrição e partilhar todas as informações logísticas.</p>
-              <form id="preinscricao-form" method="post" action="submit_course_registration.php" novalidate>
+              <form id="preinscricao-form" method="post" action="submit_course_registration.php" enctype="multipart/form-data" novalidate>
+                <input type="hidden" id="course-id-field" name="course_id">
+                <input type="hidden" id="course-price-field" name="course_price">
                 <div class="course-form-grid">
                   <div class="form-group">
                     <label class="form-label" for="empresa">Empresa</label>
@@ -602,28 +649,24 @@
                     <label class="form-label" for="curso">Curso</label>
                     <input type="text" class="form-control" id="curso" name="curso" readonly>
                   </div>
+                  <div class="form-group">
+                    <label class="form-label" for="preco-curso">Preço</label>
+                    <input type="text" class="form-control" id="preco-curso" readonly>
+                  </div>
                 </div>
                 <div class="form-group mt-4">
                   <span class="form-label">Forma de Pagamento*</span>
                   <div class="radio-group" id="forma-pagamento-group">
                     <label class="radio-option">
-                      <input type="radio" name="forma_pagamento" value="Transferência Bancária" required>
+                      <input type="radio" name="forma_pagamento" value="Transferência Bancária" required checked>
                       <span>Transferência Bancária</span>
                     </label>
-                    <label class="radio-option">
-                      <input type="radio" name="forma_pagamento" value="Depósito em Conta" required>
-                      <span>Depósito em Conta</span>
-                    </label>
-                    <label class="radio-option">
-                      <input type="radio" name="forma_pagamento" value="Multicaixa / POS" required>
-                      <span>Multicaixa / POS</span>
-                    </label>
-                    <label class="radio-option">
-                      <input type="radio" name="forma_pagamento" value="Outro" required>
-                      <span>Outro</span>
-                      <input type="text" class="form-control" id="forma-pagamento-outro" placeholder="Descreve a opção" style="max-width: 220px;">
-                    </label>
                   </div>
+                </div>
+                <div class="form-group mt-3">
+                  <label class="form-label" for="comprovativo">Comprovativo da transferência*</label>
+                  <input type="file" class="form-control" id="comprovativo" name="comprovativo" accept=".pdf,.jpg,.jpeg,.png" required>
+                  <span class="form-help">Formatos aceites: PDF, JPG ou PNG com tamanho máximo de 1&nbsp;MB.</span>
                 </div>
                 <div class="form-group mt-3">
                   <label class="form-label" for="mensagem">Mensagem</label>
@@ -729,10 +772,13 @@
         const menuEmpty = document.getElementById('courses-menu-empty');
         const detailContainer = document.getElementById('course-detail');
         const courseInput = document.getElementById('curso');
+        const courseIdField = document.getElementById('course-id-field');
+        const coursePriceField = document.getElementById('course-price-field');
+        const coursePriceInput = document.getElementById('preco-curso');
         const formCard = document.getElementById('course-form-card');
         const formStatus = document.getElementById('form-status');
         const form = document.getElementById('preinscricao-form');
-        const otherInput = document.getElementById('forma-pagamento-outro');
+        const paymentProofInput = document.getElementById('comprovativo');
         const successPopup = document.getElementById('success-popup');
         const closePopupButton = document.getElementById('close-popup');
 
@@ -743,6 +789,10 @@
         const categoryMap = new Map();
         const subcategoryMap = new Map();
         let autoCloseTimeout = null;
+
+        function getCourseById(id) {
+          return courses.find(item => item.id === id);
+        }
 
         function escapeText(text) {
           const div = document.createElement('div');
@@ -810,10 +860,24 @@
             if (courseInput) {
               courseInput.value = '';
             }
+            if (courseIdField) {
+              courseIdField.value = '';
+            }
+            if (coursePriceField) {
+              coursePriceField.value = '';
+            }
+            if (coursePriceInput) {
+              coursePriceInput.value = '';
+            }
+            if (paymentProofInput) {
+              paymentProofInput.value = '';
+            }
             return;
           }
 
           formCard.style.display = '';
+
+          const priceValue = (course.price || '').toString().trim();
 
           const head = document.createElement('div');
           head.className = 'course-detail-head';
@@ -833,12 +897,31 @@
             head.appendChild(headline);
           }
 
+          if (priceValue) {
+            const priceTag = document.createElement('div');
+            priceTag.className = 'course-price-tag';
+            priceTag.textContent = priceValue;
+            head.appendChild(priceTag);
+          }
+
           const columns = document.createElement('div');
           columns.className = 'course-detail-columns';
 
           const main = document.createElement('div');
           const side = document.createElement('aside');
           side.className = 'course-detail-side';
+
+          if (priceValue) {
+            const priceChip = document.createElement('div');
+            priceChip.className = 'course-price-chip';
+            const label = document.createElement('strong');
+            label.textContent = 'Investimento';
+            const value = document.createElement('span');
+            value.textContent = priceValue;
+            priceChip.appendChild(label);
+            priceChip.appendChild(value);
+            side.appendChild(priceChip);
+          }
 
           const overviewSection = buildParagraphs(course.overview);
           if (overviewSection) {
@@ -893,6 +976,18 @@
           activeCourseId = course.id;
           if (courseInput) {
             courseInput.value = course.title;
+          }
+          if (courseIdField) {
+            courseIdField.value = course.id || '';
+          }
+          if (coursePriceField) {
+            coursePriceField.value = priceValue;
+          }
+          if (coursePriceInput) {
+            coursePriceInput.value = priceValue;
+          }
+          if (paymentProofInput) {
+            paymentProofInput.value = '';
           }
         }
 
@@ -1032,7 +1127,7 @@
         }
 
         function setActiveCourse(courseId) {
-          let course = courses.find(item => item.id === courseId);
+          let course = getCourseById(courseId);
           if (!course) {
             if (courses.length) {
               course = courses[0];
@@ -1086,16 +1181,34 @@
             formStatus.className = 'form-status';
 
             const formData = new FormData(form);
-            const selectedPayment = formData.get('forma_pagamento');
-            if (selectedPayment === 'Outro') {
-              const otherValue = (otherInput && otherInput.value.trim()) ? otherInput.value.trim() : '';
-              if (otherValue) {
-                formData.set('forma_pagamento', 'Outro: ' + otherValue);
-              }
+            if (!formData.get('course_id') || !formData.get('curso')) {
+              formStatus.textContent = 'Selecciona um curso antes de submeter.';
+              formStatus.classList.add('error');
+              return;
             }
 
-            if (!formData.get('curso')) {
-              formStatus.textContent = 'Selecciona um curso antes de submeter.';
+            if (!formData.get('forma_pagamento')) {
+              formStatus.textContent = 'Selecciona a forma de pagamento preferencial.';
+              formStatus.classList.add('error');
+              return;
+            }
+
+            const proofFile = paymentProofInput && paymentProofInput.files ? paymentProofInput.files[0] : null;
+            if (!proofFile) {
+              formStatus.textContent = 'Anexa o comprovativo da transferência.';
+              formStatus.classList.add('error');
+              return;
+            }
+
+            if (proofFile.size > 1048576) {
+              formStatus.textContent = 'O comprovativo deve ter no máximo 1MB.';
+              formStatus.classList.add('error');
+              return;
+            }
+
+            const allowedTypes = ['application/pdf', 'application/x-pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            if (allowedTypes.indexOf(proofFile.type) === -1) {
+              formStatus.textContent = 'O comprovativo deve ser PDF, JPG ou PNG.';
               formStatus.classList.add('error');
               return;
             }
@@ -1114,8 +1227,23 @@
               }
 
               form.reset();
-              if (courseInput) {
-                courseInput.value = courses.find(item => item.id === activeCourseId)?.title || '';
+              const currentCourse = getCourseById(activeCourseId);
+              if (currentCourse) {
+                if (courseInput) {
+                  courseInput.value = currentCourse.title || '';
+                }
+                if (courseIdField) {
+                  courseIdField.value = currentCourse.id || '';
+                }
+                if (coursePriceField) {
+                  coursePriceField.value = currentCourse.price || '';
+                }
+                if (coursePriceInput) {
+                  coursePriceInput.value = currentCourse.price || '';
+                }
+              }
+              if (paymentProofInput) {
+                paymentProofInput.value = '';
               }
               formStatus.textContent = payload.emailSent ? 'Inscrição enviada com sucesso.' : 'Inscrição registada. Não foi possível enviar o email automático, entraremos em contacto.';
               formStatus.classList.add('success');

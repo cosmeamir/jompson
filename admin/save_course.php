@@ -26,9 +26,10 @@ $specificObjectives = trim($_POST['specific_objectives'] ?? '');
 $contents = trim($_POST['contents'] ?? '');
 $details = trim($_POST['details'] ?? '');
 $pdfUrl = trim($_POST['pdf_url'] ?? '');
+$price = trim($_POST['price'] ?? '');
 
-if ($categoryId === '' || $subcategoryId === '' || $title === '') {
-    redirect_with_message('admin_error', 'Selecciona a categoria, subcategoria e indica o título do curso.');
+if ($categoryId === '' || $subcategoryId === '' || $title === '' || $price === '') {
+    redirect_with_message('admin_error', 'Selecciona a categoria, subcategoria e indica o título e preço do curso.');
 }
 
 if ($mode === 'update' && $courseId === '') {
@@ -88,6 +89,7 @@ if ($mode === 'update') {
             $course['contents'] = $contents;
             $course['details'] = $details;
             $course['pdf_url'] = $pdfUrl;
+            $course['price'] = $price;
             $course['updated_at'] = $now;
             if (empty($course['created_at'])) {
                 $course['created_at'] = $now;
@@ -119,6 +121,7 @@ if ($mode === 'update') {
         'contents' => $contents,
         'details' => $details,
         'pdf_url' => $pdfUrl,
+        'price' => $price,
         'created_at' => $now,
         'updated_at' => $now,
     ];
