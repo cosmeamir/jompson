@@ -18,6 +18,10 @@ function load_data(): array
                 'experience' => 0,
             ],
             'blogs' => [],
+            'course_categories' => [],
+            'course_subcategories' => [],
+            'courses' => [],
+            'course_registrations' => [],
         ];
     }
 
@@ -32,11 +36,19 @@ function load_data(): array
                 'experience' => 0,
             ],
             'blogs' => [],
+            'course_categories' => [],
+            'course_subcategories' => [],
+            'courses' => [],
+            'course_registrations' => [],
         ];
     }
 
     $data['stats'] = $data['stats'] ?? [];
     $data['blogs'] = $data['blogs'] ?? [];
+    $data['course_categories'] = $data['course_categories'] ?? [];
+    $data['course_subcategories'] = $data['course_subcategories'] ?? [];
+    $data['courses'] = $data['courses'] ?? [];
+    $data['course_registrations'] = $data['course_registrations'] ?? [];
 
     return $data;
 }
