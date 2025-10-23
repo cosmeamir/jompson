@@ -3,18 +3,42 @@ require_once __DIR__ . '/admin/config.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 
+const JSON_FLAGS = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
         'success' => false,
         'error' => 'Método inválido.'
-    ]);
+    ], JSON_FLAGS);
     exit;
 }
 
 function field(string $key): string
 {
     return trim($_POST[$key] ?? '');
+}
+
+function random_hex(int $bytes): string
+{
+    if ($bytes <= 0) {
+        return '';
+    }
+
+    try {
+        return bin2hex(random_bytes($bytes));
+    } catch (Throwable $exception) {
+        $fallback = '';
+        for ($i = 0; $i < $bytes; $i++) {
+            try {
+                $fallback .= chr(random_int(0, 255));
+            } catch (Throwable $innerException) {
+                $fallback .= chr(mt_rand(0, 255));
+            }
+        }
+
+        return bin2hex($fallback);
+    }
 }
 
 $empresa = field('empresa');
@@ -106,10 +130,26 @@ if (!isset($comprovativo) || !is_array($comprovativo) || ($comprovativo['error']
     } elseif ($proofSize > 1048576) {
         $errors[] = 'O comprovativo deve ter no máximo 1MB.';
     } else {
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->file($comprovativo['tmp_name']);
-        $finfo->close();
-        if (!isset($allowedProofMimes[$mimeType])) {
+        $mimeType = '';
+        if (class_exists('finfo')) {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mimeType = (string) $finfo->file($comprovativo['tmp_name']);
+        } elseif (function_exists('mime_content_type')) {
+            $mimeType = (string) mime_content_type($comprovativo['tmp_name']);
+        }
+
+        if ($mimeType === '' && isset($comprovativo['name'])) {
+            $extension = strtolower((string) pathinfo($comprovativo['name'], PATHINFO_EXTENSION));
+            $extensionToMime = [
+                'pdf' => 'application/pdf',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+            ];
+            $mimeType = $extensionToMime[$extension] ?? '';
+        }
+
+        if ($mimeType === '' || !isset($allowedProofMimes[$mimeType])) {
             $errors[] = 'O comprovativo deve ser um ficheiro PDF, JPG ou PNG.';
         } else {
             $comprovativoMeta = [
@@ -127,7 +167,7 @@ if (!empty($errors)) {
     echo json_encode([
         'success' => false,
         'error' => implode(' ', $errors)
-    ]);
+    ], JSON_FLAGS);
     exit;
 }
 
@@ -139,11 +179,11 @@ if ($comprovativoMeta !== null) {
         echo json_encode([
             'success' => false,
             'error' => 'Não foi possível preparar o diretório de comprovativos.'
-        ]);
+        ], JSON_FLAGS);
         exit;
     }
 
-    $proofFilename = 'comprovativo-' . bin2hex(random_bytes(12)) . '.' . $comprovativoMeta['extension'];
+    $proofFilename = 'comprovativo-' . random_hex(12) . '.' . $comprovativoMeta['extension'];
     $targetPath = $uploadDir . '/' . $proofFilename;
 
     if (!move_uploaded_file($comprovativoMeta['tmp_name'], $targetPath)) {
@@ -151,7 +191,7 @@ if ($comprovativoMeta !== null) {
         echo json_encode([
             'success' => false,
             'error' => 'Não foi possível guardar o comprovativo enviado. Tenta novamente.'
-        ]);
+        ], JSON_FLAGS);
         exit;
     }
 
@@ -161,7 +201,7 @@ if ($comprovativoMeta !== null) {
 $registrations = $data['course_registrations'] ?? [];
 
 $registration = [
-    'id' => 'registration-' . bin2hex(random_bytes(6)),
+    'id' => 'registration-' . random_hex(6),
     'empresa' => $empresa,
     'nome' => $nome,
     'pais' => $pais,
@@ -214,18 +254,39 @@ $lines = [
 
 $body = implode("\n", $lines);
 
+// Encode the subject using UTF-8 so mail agents render it correctly.
+$encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+
+$sanitisedReplyTo = filter_var($email, FILTER_SANITIZE_EMAIL) ?: '';
+$fromAddress = 'no-reply@jompson.com';
+$fromName = 'JOMPSON Cursos';
+$encodedFromName = '=?UTF-8?B?' . base64_encode($fromName) . '?=';
+
+$messageId = sprintf('<%s@jompson.com>', random_hex(16));
+
+if ($sanitisedReplyTo === '') {
+    $sanitisedReplyTo = $fromAddress;
+}
+
 $headers = [
     'MIME-Version: 1.0',
+    'Date: ' . date(DATE_RFC2822),
     'Content-Type: text/plain; charset=UTF-8',
-    'From: noreply@jompson.com',
-    'Reply-To: ' . $email,
+    'Content-Transfer-Encoding: 8bit',
+    'From: ' . $encodedFromName . ' <' . $fromAddress . '>',
+    'Reply-To: ' . $sanitisedReplyTo,
+    'Return-Path: ' . $fromAddress,
+    'Message-ID: ' . $messageId,
+    'X-Mailer: PHP/' . phpversion(),
 ];
 
-$emailSent = @mail($to, $subject, $body, implode("\r\n", $headers));
+$additionalParameters = '-f' . $fromAddress;
+
+$emailSent = @mail($to, $encodedSubject, $body, implode("\r\n", $headers), $additionalParameters);
 
 http_response_code(200);
 
 echo json_encode([
     'success' => true,
     'emailSent' => $emailSent,
-]);
+], JSON_FLAGS);

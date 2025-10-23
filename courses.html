@@ -854,7 +854,9 @@
           if (!course) {
             const empty = document.createElement('div');
             empty.className = 'course-empty-state';
-            empty.textContent = 'Não existem cursos disponíveis neste momento.';
+            empty.textContent = courses.length
+              ? 'Selecciona uma categoria e depois um curso para veres os detalhes.'
+              : 'Não existem cursos disponíveis neste momento.';
             detailContainer.appendChild(empty);
             formCard.style.display = 'none';
             if (courseInput) {
@@ -1017,7 +1019,7 @@
           const categories = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
           categories.forEach((category, categoryIndex) => {
             const categoryBlock = document.createElement('div');
-            categoryBlock.className = 'courses-menu__category-block' + (categoryIndex === 0 ? ' is-open' : '');
+            categoryBlock.className = 'courses-menu__category-block';
 
             const categoryButton = document.createElement('button');
             categoryButton.type = 'button';
@@ -1027,17 +1029,6 @@
               const willOpen = !categoryBlock.classList.contains('is-open');
               if (willOpen) {
                 categoryBlock.classList.add('is-open');
-                const firstOpenSub = subWrapper.querySelector('.courses-menu__subcategory-block.is-open');
-                if (!firstOpenSub) {
-                  const firstSub = subWrapper.querySelector('.courses-menu__subcategory-block');
-                  if (firstSub) {
-                    firstSub.classList.add('is-open');
-                  }
-                }
-                const preferredCourseButton = categoryBlock.querySelector('.courses-menu__course-btn.is-active') || categoryBlock.querySelector('.courses-menu__course-btn');
-                if (preferredCourseButton) {
-                  setActiveCourse(preferredCourseButton.dataset.courseId);
-                }
               } else {
                 categoryBlock.classList.remove('is-open');
                 subWrapper.querySelectorAll('.courses-menu__subcategory-block').forEach(block => block.classList.remove('is-open'));
@@ -1051,7 +1042,7 @@
             const subcategories = Object.keys(grouped[category]).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }));
             subcategories.forEach((subcategory, subIndex) => {
               const subBlock = document.createElement('div');
-              subBlock.className = 'courses-menu__subcategory-block' + (categoryIndex === 0 && subIndex === 0 ? ' is-open' : '');
+              subBlock.className = 'courses-menu__subcategory-block';
 
               const subButton = document.createElement('button');
               subButton.type = 'button';
@@ -1067,12 +1058,10 @@
                   });
                 }
                 subBlock.classList.toggle('is-open');
-                if (willOpen) {
-                  const firstCourseButton = subBlock.querySelector('.courses-menu__course-btn');
-                  if (firstCourseButton) {
-                    setActiveCourse(firstCourseButton.dataset.courseId);
-                  }
+                if (!willOpen) {
+                  return;
                 }
+
               });
 
               const list = document.createElement('ul');
@@ -1092,9 +1081,6 @@
                 listItem.appendChild(button);
                 list.appendChild(listItem);
 
-                if (!activeCourseId && categoryIndex === 0 && subIndex === 0 && courseIndex === 0) {
-                  activeCourseId = course.id;
-                }
               });
 
               subBlock.appendChild(subButton);
@@ -1221,7 +1207,18 @@
                   'Accept': 'application/json'
                 }
               });
-              const payload = await response.json();
+
+              const rawText = await response.text();
+              let payload = {};
+
+              if (rawText) {
+                try {
+                  payload = JSON.parse(rawText);
+                } catch (parseError) {
+                  throw new Error('Recebemos uma resposta inesperada do servidor. Tenta novamente em instantes.');
+                }
+              }
+
               if (!response.ok || !payload.success) {
                 throw new Error(payload.error || 'Não foi possível enviar a inscrição.');
               }
@@ -1249,7 +1246,7 @@
               formStatus.classList.add('success');
               showPopup();
             } catch (error) {
-              formStatus.textContent = error.message || 'Erro ao enviar a inscrição. Tente novamente.';
+              formStatus.textContent = (error && error.message) ? error.message : 'Erro ao enviar a inscrição. Tente novamente.';
               formStatus.classList.add('error');
             }
           });
