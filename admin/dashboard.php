@@ -174,54 +174,103 @@ $dashboardPayload = [
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(admin_asset('adminV2/assets/css/admin.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(admin_asset('adminV2/assets/css/app.css'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
-<body class="admin-body">
-<div class="app-shell">
-    <aside class="app-sidebar">
-        <div class="sidebar-brand">
-            <span class="brand-icon"><i class="bi bi-stack"></i></span>
-            <div>
-                <strong>Jompson Admin</strong><br>
-                <span>Painel de controlo</span>
-            </div>
+<body>
+<div class="sidebar-overlay" data-dismiss-sidebar></div>
+<div class="wrapper">
+    <nav id="sidebar" class="sidebar js-sidebar">
+        <div class="sidebar-content">
+            <a class="sidebar-brand" href="dashboard.php">
+                <i class="bi bi-stack"></i>
+                <span>Jompson Admin</span>
+            </a>
+            <div class="sidebar-title">Painel</div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-item">
+                    <a class="sidebar-link is-active" href="#overview" data-section-target="overview">
+                        <span class="sidebar-icon"><i class="bi bi-speedometer2"></i></span>
+                        <span>Visão Geral</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="#indicadores" data-section-target="indicadores">
+                        <span class="sidebar-icon"><i class="bi bi-graph-up"></i></span>
+                        <span>Indicadores</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-title">Catálogo de Cursos</div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="#categorias" data-section-target="categorias">
+                        <span class="sidebar-icon"><i class="bi bi-diagram-3"></i></span>
+                        <span>Categorias</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="#subcategorias" data-section-target="subcategorias">
+                        <span class="sidebar-icon"><i class="bi bi-diagram-2"></i></span>
+                        <span>Subcategorias</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="#courses" data-section-target="courses">
+                        <span class="sidebar-icon"><i class="bi bi-mortarboard"></i></span>
+                        <span>Cursos</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="#inscricoes" data-section-target="inscricoes">
+                        <span class="sidebar-icon"><i class="bi bi-people"></i></span>
+                        <span>Inscrições</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="sidebar-title">Comunicação</div>
+            <ul class="sidebar-nav">
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="#blogs" data-section-target="blogs">
+                        <span class="sidebar-icon"><i class="bi bi-journal-text"></i></span>
+                        <span>Blog</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="#comunicacoes" data-section-target="comunicacoes">
+                        <span class="sidebar-icon"><i class="bi bi-envelope-paper"></i></span>
+                        <span>Comunicações</span>
+                    </a>
+                </li>
+            </ul>
         </div>
-        <nav class="sidebar-nav">
-            <div class="nav-group">
-                <span class="nav-group-label">Painel</span>
-                <a class="nav-link-item" href="#overview" data-section-target="overview"><i class="bi bi-speedometer"></i>Visão Geral</a>
-                <a class="nav-link-item" href="#indicadores" data-section-target="indicadores"><i class="bi bi-bar-chart"></i>Indicadores</a>
-            </div>
-            <div class="nav-group">
-                <span class="nav-group-label">Catálogo de Cursos</span>
-                <a class="nav-link-item" href="#categorias" data-section-target="categorias"><i class="bi bi-diagram-3"></i>Categorias</a>
-                <a class="nav-link-item" href="#subcategorias" data-section-target="subcategorias"><i class="bi bi-diagram-2"></i>Subcategorias</a>
-                <a class="nav-link-item" href="#courses" data-section-target="courses"><i class="bi bi-mortarboard"></i>Cursos</a>
-                <a class="nav-link-item" href="#inscricoes" data-section-target="inscricoes"><i class="bi bi-people"></i>Inscrições</a>
-            </div>
-            <div class="nav-group">
-                <span class="nav-group-label">Comunicação</span>
-                <a class="nav-link-item" href="#blogs" data-section-target="blogs"><i class="bi bi-journal-text"></i>Blog</a>
-                <a class="nav-link-item" href="#comunicacoes" data-section-target="comunicacoes"><i class="bi bi-envelope-paper"></i>Comunicações</a>
+        <div class="sidebar-footer">
+            <a href="../index.html" target="_blank" rel="noopener">
+                <i class="bi bi-globe"></i>
+                <span>Ver site</span>
+            </a>
+            <a href="logout.php">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Terminar sessão</span>
+            </a>
+        </div>
+    </nav>
+    <div class="main">
+        <nav class="navbar navbar-expand navbar-light navbar-bg">
+            <button class="sidebar-toggle" type="button" data-toggle-sidebar aria-label="Alternar menu">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <span class="navbar-brand d-none d-sm-inline fw-semibold">Painel administrativo</span>
+            <div class="navbar-collapse collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item navbar-user">
+                        <span class="avatar"><i class="bi bi-person-fill"></i></span>
+                        <span>Administrador</span>
+                    </li>
+                </ul>
             </div>
         </nav>
-        <div class="sidebar-footer">
-            <a href="../index.html" target="_blank" rel="noopener"><i class="bi bi-globe"></i>Ver site</a>
-            <a href="logout.php"><i class="bi bi-box-arrow-right"></i>Terminar sessão</a>
-        </div>
-    </aside>
-    <div class="app-main">
-        <header class="app-topbar">
-            <div class="topbar-intro">
-                <h1>Painel administrativo</h1>
-                <p>Organize cursos, inscrições e comunicações oficiais da JOMPSON.</p>
-            </div>
-            <div class="topbar-user">
-                <span class="avatar"><i class="bi bi-person-fill"></i></span>
-                <span>Administrador</span>
-            </div>
-        </header>
-        <div class="app-content">
+        <main class="content">
+            <div class="container-fluid p-0">
             <?php if ($successMessage || $errorMessage): ?>
                 <div class="app-alerts">
                     <?php if ($successMessage): ?>
@@ -239,7 +288,7 @@ $dashboardPayload = [
                 </div>
             <?php endif; ?>
 
-            <section id="overview" class="app-section is-active" data-section>
+            <section id="overview" class="section is-active" data-section>
                 <div class="section-header">
                     <h2>Visão geral</h2>
                     <p>Resumo das métricas e conteúdos activos no site.</p>
@@ -288,7 +337,7 @@ $dashboardPayload = [
                 </div>
             </section>
 
-            <section id="indicadores" class="app-section" data-section>
+            <section id="indicadores" class="section" data-section>
                 <div class="section-header">
                     <h2>Indicadores principais</h2>
                     <p>Actualize os números exibidos na página inicial.</p>
@@ -320,7 +369,7 @@ $dashboardPayload = [
                 </div>
             </section>
 
-            <section id="categorias" class="app-section" data-section>
+            <section id="categorias" class="section" data-section>
                 <div class="section-header">
                     <h2>Categorias</h2>
                     <p>Organize o portefólio de cursos por áreas estratégicas.</p>
@@ -380,7 +429,7 @@ $dashboardPayload = [
                 </div>
             </section>
 
-            <section id="subcategorias" class="app-section" data-section>
+            <section id="subcategorias" class="section" data-section>
                 <div class="section-header">
                     <h2>Subcategorias</h2>
                     <p>Crie níveis adicionais para organizar os cursos dentro de cada categoria.</p>
@@ -455,7 +504,7 @@ $dashboardPayload = [
                 </div>
             </section>
 
-            <section id="courses" class="app-section" data-section>
+            <section id="courses" class="section" data-section>
                 <div class="section-header">
                     <h2>Cursos</h2>
                     <p>Adicione ou actualize os programas disponibilizados na página “Cursos”.</p>
@@ -601,7 +650,7 @@ $dashboardPayload = [
                 </div>
             </section>
 
-            <section id="inscricoes" class="app-section" data-section>
+            <section id="inscricoes" class="section" data-section>
                 <div class="section-header">
                     <h2>Pré-inscrições</h2>
                     <p>Acompanhe as submissões recebidas pelo formulário público.</p>
@@ -688,7 +737,7 @@ $dashboardPayload = [
                 </section>
             </section>
 
-            <section id="comunicacoes" class="app-section" data-section>
+            <section id="comunicacoes" class="section" data-section>
                 <div class="section-header">
                     <h2>Comunicações</h2>
                     <p>Dados de autenticação da caixa info@jompson.com.</p>
@@ -734,7 +783,7 @@ $dashboardPayload = [
                 </section>
             </section>
 
-            <section id="blogs" class="app-section" data-section>
+            <section id="blogs" class="section" data-section>
                 <div class="section-header">
                     <h2>Blog</h2>
                     <p>Publica artigos e mantém o conteúdo editorial actualizado.</p>
@@ -870,7 +919,11 @@ $dashboardPayload = [
                     </section>
                 </div>
             </section>
-        </div>
+            </div>
+        </main>
+        <footer class="footer">
+            <div>&copy; <?php echo date('Y'); ?> Jompson. Todos os direitos reservados.</div>
+        </footer>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

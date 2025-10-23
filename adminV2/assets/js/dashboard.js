@@ -1,7 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const pageBody = document.body;
+    const sidebarToggle = document.querySelector('[data-toggle-sidebar]');
+    const sidebarOverlay = document.querySelector('.sidebar-overlay');
     const defaultSection = 'overview';
     const sections = Array.from(document.querySelectorAll('[data-section]'));
     const navLinks = Array.from(document.querySelectorAll('[data-section-target]'));
+
+    const closeSidebar = () => {
+        pageBody.classList.remove('sidebar-open');
+    };
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            pageBody.classList.toggle('sidebar-open');
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
 
     const activateSection = (id) => {
         if (!id) {
@@ -44,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.hash = `#${target}`;
             }
             activateSection(target);
+            closeSidebar();
         });
     });
 
