@@ -41,6 +41,218 @@ function random_hex(int $bytes): string
     }
 }
 
+function get_email_config(): array
+{
+    return defined('EMAIL_CONFIG') && is_array(EMAIL_CONFIG) ? EMAIL_CONFIG : [];
+}
+
+function normalise_crlf(string $text): string
+{
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    return str_replace("\n", "\r\n", $text);
+}
+
+function smtp_read_response($stream): array
+{
+    $response = '';
+    while (($line = fgets($stream, 515)) !== false) {
+        $response .= $line;
+        if (strlen($line) >= 4 && $line[3] === '-') {
+            continue;
+        }
+        break;
+    }
+
+    $code = (int) substr($response, 0, 3);
+
+    return [$code, $response];
+}
+
+function smtp_expect($stream, array $expectedCodes): bool
+{
+    [$code] = smtp_read_response($stream);
+    return in_array($code, $expectedCodes, true);
+}
+
+function smtp_command($stream, string $command, array $expectedCodes): bool
+{
+    if (@fwrite($stream, $command . "\r\n") === false) {
+        return false;
+    }
+
+    return smtp_expect($stream, $expectedCodes);
+}
+
+function smtp_send_message(array $smtpConfig, string $fromAddress, string $toAddress, string $message): bool
+{
+    $host = trim($smtpConfig['host'] ?? '');
+    $port = (int) ($smtpConfig['port'] ?? 0);
+    $encryption = strtolower(trim($smtpConfig['encryption'] ?? ''));
+    $username = (string) ($smtpConfig['username'] ?? '');
+    $password = (string) ($smtpConfig['password'] ?? '');
+    $timeout = (int) ($smtpConfig['timeout'] ?? 30);
+
+    if ($host === '' || $port <= 0) {
+        return false;
+    }
+
+    $remote = $host . ':' . $port;
+    $transport = $remote;
+    $contextOptions = [];
+
+    if ($encryption === 'ssl') {
+        $transport = 'ssl://' . $remote;
+        $contextOptions['ssl'] = [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+            'allow_self_signed' => false,
+        ];
+    }
+
+    $context = empty($contextOptions) ? null : stream_context_create($contextOptions);
+    $stream = @stream_socket_client($transport, $errno, $errstr, $timeout ?: 30, STREAM_CLIENT_CONNECT, $context);
+
+    if (!is_resource($stream)) {
+        return false;
+    }
+
+    stream_set_timeout($stream, $timeout ?: 30);
+
+    if (!smtp_expect($stream, [220])) {
+        fclose($stream);
+        return false;
+    }
+
+    $ehloDomain = 'jompson.com';
+    if (!smtp_command($stream, 'EHLO ' . $ehloDomain, [250])) {
+        fclose($stream);
+        return false;
+    }
+
+    if ($encryption === 'tls') {
+        if (!smtp_command($stream, 'STARTTLS', [220])) {
+            fclose($stream);
+            return false;
+        }
+
+        if (!stream_socket_enable_crypto($stream, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            fclose($stream);
+            return false;
+        }
+
+        if (!smtp_command($stream, 'EHLO ' . $ehloDomain, [250])) {
+            fclose($stream);
+            return false;
+        }
+    }
+
+    if ($username !== '' && $password !== '') {
+        if (!smtp_command($stream, 'AUTH LOGIN', [334])) {
+            fclose($stream);
+            return false;
+        }
+
+        if (!smtp_command($stream, base64_encode($username), [334])) {
+            fclose($stream);
+            return false;
+        }
+
+        if (!smtp_command($stream, base64_encode($password), [235])) {
+            fclose($stream);
+            return false;
+        }
+    }
+
+    if (!smtp_command($stream, 'MAIL FROM:<' . $fromAddress . '>', [250])) {
+        fclose($stream);
+        return false;
+    }
+
+    if (!smtp_command($stream, 'RCPT TO:<' . $toAddress . '>', [250, 251])) {
+        fclose($stream);
+        return false;
+    }
+
+    if (!smtp_command($stream, 'DATA', [354])) {
+        fclose($stream);
+        return false;
+    }
+
+    $message = normalise_crlf($message);
+    $message = preg_replace('/(^|\r\n)\./', '$1..', $message);
+    if (substr($message, -2) !== "\r\n") {
+        $message .= "\r\n";
+    }
+
+    if (@fwrite($stream, $message . ".\r\n") === false) {
+        fclose($stream);
+        return false;
+    }
+
+    if (!smtp_expect($stream, [250])) {
+        fclose($stream);
+        return false;
+    }
+
+    smtp_command($stream, 'QUIT', [221]);
+    fclose($stream);
+
+    return true;
+}
+
+function send_registration_notification(string $subject, string $body, string $replyTo): array
+{
+    $config = get_email_config();
+    $fromAddress = filter_var($config['from_address'] ?? '', FILTER_VALIDATE_EMAIL) ?: 'no-reply@jompson.com';
+    $fromName = $config['from_name'] ?? 'JOMPSON Cursos';
+    $fallbackReply = filter_var($config['reply_to_fallback'] ?? '', FILTER_VALIDATE_EMAIL) ?: $fromAddress;
+    $toAddress = filter_var($config['to_address'] ?? '', FILTER_VALIDATE_EMAIL) ?: 'geral@jompson.com';
+    $replyTo = filter_var($replyTo, FILTER_VALIDATE_EMAIL) ?: $fallbackReply;
+
+    $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    $encodedFromName = '=?UTF-8?B?' . base64_encode($fromName) . '?=';
+    $messageId = sprintf('<%s@jompson.com>', random_hex(16));
+    $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    $baseHeaders = [
+        'MIME-Version: 1.0',
+        'Date: ' . date(DATE_RFC2822),
+        'Content-Type: text/plain; charset=UTF-8',
+        'Content-Transfer-Encoding: 8bit',
+        'From: ' . $encodedFromName . ' <' . $fromAddress . '>',
+        'Reply-To: ' . $replyTo,
+        'Message-ID: ' . $messageId,
+        'X-Mailer: JOMPSON Dashboard',
+    ];
+
+    if ($originIp !== '') {
+        $baseHeaders[] = 'X-Originating-IP: ' . $originIp;
+    }
+
+    $smtpHeaders = array_merge([
+        'To: ' . $toAddress,
+        'Subject: ' . $encodedSubject,
+    ], $baseHeaders);
+
+    $message = implode("\r\n", $smtpHeaders) . "\r\n\r\n" . $body;
+
+    $smtpConfig = $config['smtp'] ?? [];
+    $sentVia = 'smtp';
+    $sent = false;
+
+    if (!empty($smtpConfig)) {
+        $sent = smtp_send_message($smtpConfig, $fromAddress, $toAddress, $message);
+    }
+
+    if (!$sent) {
+        $sentVia = 'mail';
+        $mailHeaders = implode("\r\n", array_merge($baseHeaders, ['To: ' . $toAddress]));
+        $sent = @mail($toAddress, $encodedSubject, $body, $mailHeaders, '-f' . $fromAddress);
+    }
+
+    return ['sent' => (bool) $sent, 'transport' => $sentVia];
+}
+
 $empresa = field('empresa');
 $nome = field('nome');
 $pais = field('pais');
@@ -226,7 +438,6 @@ $registrations[] = $registration;
 $data['course_registrations'] = $registrations;
 save_data($data);
 
-$to = 'geral@jompson.com';
 $subject = 'Nova pré-inscrição - ' . $curso;
 
 $lines = [
@@ -254,39 +465,14 @@ $lines = [
 
 $body = implode("\n", $lines);
 
-// Encode the subject using UTF-8 so mail agents render it correctly.
-$encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-
-$sanitisedReplyTo = filter_var($email, FILTER_SANITIZE_EMAIL) ?: '';
-$fromAddress = 'no-reply@jompson.com';
-$fromName = 'JOMPSON Cursos';
-$encodedFromName = '=?UTF-8?B?' . base64_encode($fromName) . '?=';
-
-$messageId = sprintf('<%s@jompson.com>', random_hex(16));
-
-if ($sanitisedReplyTo === '') {
-    $sanitisedReplyTo = $fromAddress;
-}
-
-$headers = [
-    'MIME-Version: 1.0',
-    'Date: ' . date(DATE_RFC2822),
-    'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
-    'From: ' . $encodedFromName . ' <' . $fromAddress . '>',
-    'Reply-To: ' . $sanitisedReplyTo,
-    'Return-Path: ' . $fromAddress,
-    'Message-ID: ' . $messageId,
-    'X-Mailer: PHP/' . phpversion(),
-];
-
-$additionalParameters = '-f' . $fromAddress;
-
-$emailSent = @mail($to, $encodedSubject, $body, implode("\r\n", $headers), $additionalParameters);
+$emailResult = send_registration_notification($subject, $body, $email);
+$emailSent = $emailResult['sent'];
+$emailTransport = $emailResult['transport'];
 
 http_response_code(200);
 
 echo json_encode([
     'success' => true,
     'emailSent' => $emailSent,
+    'transport' => $emailTransport,
 ], JSON_FLAGS);

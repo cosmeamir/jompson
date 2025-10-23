@@ -12,6 +12,9 @@ $courses = $data['courses'];
 $courseRegistrations = $data['course_registrations'];
 $courseCategories = $data['course_categories'] ?? [];
 $courseSubcategories = $data['course_subcategories'] ?? [];
+$emailConfig = defined('EMAIL_CONFIG') && is_array(EMAIL_CONFIG) ? EMAIL_CONFIG : [];
+$smtpConfig = $emailConfig['smtp'] ?? [];
+$imapConfig = $emailConfig['imap'] ?? [];
 
 usort($courseCategories, static function (array $a, array $b): int {
     return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
@@ -401,6 +404,70 @@ function admin_asset(string $path): string
             font-size: 13px;
         }
 
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 22px;
+        }
+
+        .config-group {
+            background: var(--surface-alt);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(37, 99, 235, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .config-group h3 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .config-list {
+            margin: 0;
+        }
+
+        .config-item {
+            display: grid;
+            grid-template-columns: minmax(120px, 160px) 1fr;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .config-item:first-child {
+            padding-top: 0;
+        }
+
+        .config-item dt {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .config-item dd {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-default);
+        }
+
+        .config-note {
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
         .form-control,
         .form-control:focus,
         .custom-select,
@@ -740,6 +807,7 @@ function admin_asset(string $path): string
             <a href="#subcategorias"><i class="bi bi-diagram-2"></i>Subcategorias</a>
             <a href="#courses"><i class="bi bi-mortarboard"></i>Cursos</a>
             <a href="#inscricoes"><i class="bi bi-people"></i>Inscrições</a>
+            <a href="#comunicacoes"><i class="bi bi-envelope-gear"></i>Comunicações</a>
             <a href="#blogs"><i class="bi bi-journal-text"></i>Conteúdo</a>
         </nav>
     </header>
@@ -1207,6 +1275,93 @@ function admin_asset(string $path): string
                     </div>
                 <?php endif; ?>
             </div>
+        </section>
+
+        <section id="comunicacoes" class="content-section content-section--single">
+            <section class="module-card">
+                <header>
+                    <h2>Configurações de email</h2>
+                    <span>Utiliza estes dados para integrar o domínio nos clientes de correio.</span>
+                </header>
+                <div class="config-grid">
+                    <div class="config-group">
+                        <h3>Servidor SMTP (saída)</h3>
+                        <dl class="config-list">
+                            <div class="config-item">
+                                <dt>Protocolo</dt>
+                                <dd>SMTP</dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Host</dt>
+                                <dd><?php echo htmlspecialchars($smtpConfig['host'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Porta</dt>
+                                <dd><?php echo htmlspecialchars((string) ($smtpConfig['port'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Encriptação</dt>
+                                <dd><?php echo htmlspecialchars(strtoupper($smtpConfig['encryption'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Utilizador</dt>
+                                <dd><?php echo htmlspecialchars($smtpConfig['username'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Palavra-passe</dt>
+                                <dd><?php echo htmlspecialchars($smtpConfig['password'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="config-group">
+                        <h3>Servidor IMAP (entrada)</h3>
+                        <dl class="config-list">
+                            <div class="config-item">
+                                <dt>Protocolo</dt>
+                                <dd>IMAP</dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Host</dt>
+                                <dd><?php echo htmlspecialchars($imapConfig['host'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Porta</dt>
+                                <dd><?php echo htmlspecialchars((string) ($imapConfig['port'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Encriptação</dt>
+                                <dd><?php echo htmlspecialchars(strtoupper($imapConfig['encryption'] ?? '—'), ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Utilizador</dt>
+                                <dd><?php echo htmlspecialchars($imapConfig['username'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Palavra-passe</dt>
+                                <dd><?php echo htmlspecialchars($imapConfig['password'] ?? '—', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="config-group">
+                        <h3>Endereços utilizados</h3>
+                        <dl class="config-list">
+                            <div class="config-item">
+                                <dt>Remetente</dt>
+                                <dd><?php echo htmlspecialchars(($emailConfig['from_name'] ?? 'JOMPSON Cursos') . ' <' . ($emailConfig['from_address'] ?? 'info@jompson.com') . '>', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Resposta</dt>
+                                <dd><?php echo htmlspecialchars($emailConfig['reply_to_fallback'] ?? $emailConfig['from_address'] ?? 'info@jompson.com', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                            <div class="config-item">
+                                <dt>Destino</dt>
+                                <dd><?php echo htmlspecialchars($emailConfig['to_address'] ?? 'geral@jompson.com', ENT_QUOTES, 'UTF-8'); ?></dd>
+                            </div>
+                        </dl>
+                        <p class="config-note">Os alertas de pré-inscrição são enviados via autenticação SSL directa na porta <?php echo htmlspecialchars((string) ($smtpConfig['port'] ?? '465'), ENT_QUOTES, 'UTF-8'); ?>.</p>
+                    </div>
+                </div>
+            </section>
         </section>
 
         <section id="blogs" class="content-section content-section--single">
