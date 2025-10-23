@@ -8,6 +8,28 @@ const UPLOAD_DIR = __DIR__ . '/../uploads/blog';
 const UPLOAD_URL = 'uploads/blog';
 const MAX_UPLOAD_SIZE = 2 * 1024 * 1024; // 2MB
 
+const EMAIL_CONFIG = [
+    'from_name' => 'JOMPSON Cursos',
+    'from_address' => 'info@jompson.com',
+    'reply_to_fallback' => 'info@jompson.com',
+    'to_address' => 'geral@jompson.com',
+    'smtp' => [
+        'host' => 'smtp.hostinger.com',
+        'port' => 465,
+        'encryption' => 'ssl',
+        'username' => 'info@jompson.com',
+        'password' => 'Info#jompson2025',
+        'timeout' => 30,
+    ],
+    'imap' => [
+        'host' => 'imap.hostinger.com',
+        'port' => 993,
+        'encryption' => 'ssl',
+        'username' => 'info@jompson.com',
+        'password' => 'Info#jompson2025',
+    ],
+];
+
 function load_data(): array
 {
     if (!file_exists(DATA_FILE)) {
@@ -18,6 +40,10 @@ function load_data(): array
                 'experience' => 0,
             ],
             'blogs' => [],
+            'course_categories' => [],
+            'course_subcategories' => [],
+            'courses' => [],
+            'course_registrations' => [],
         ];
     }
 
@@ -32,11 +58,19 @@ function load_data(): array
                 'experience' => 0,
             ],
             'blogs' => [],
+            'course_categories' => [],
+            'course_subcategories' => [],
+            'courses' => [],
+            'course_registrations' => [],
         ];
     }
 
     $data['stats'] = $data['stats'] ?? [];
     $data['blogs'] = $data['blogs'] ?? [];
+    $data['course_categories'] = $data['course_categories'] ?? [];
+    $data['course_subcategories'] = $data['course_subcategories'] ?? [];
+    $data['courses'] = $data['courses'] ?? [];
+    $data['course_registrations'] = $data['course_registrations'] ?? [];
 
     return $data;
 }
