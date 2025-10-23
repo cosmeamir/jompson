@@ -1,6 +1,21 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+if (!function_exists('admin_asset')) {
+    function admin_asset(string $path): string
+    {
+        if ($path === '') {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $path) === 1 || strpos($path, '//') === 0 || strpos($path, 'data:') === 0) {
+            return $path;
+        }
+
+        return '../' . ltrim($path, '/');
+    }
+}
+
 $error = '';
 if (!empty($_SESSION['admin_logged_in'])) {
     header('Location: dashboard.php');
@@ -24,30 +39,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Login | Área Administrativa</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <style>
-        body {background:#f8f9fa;}
-        .login-wrapper {max-width:420px;margin:80px auto;padding:30px;background:#fff;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.08);} 
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar sessão | Jompson Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(admin_asset('adminV2/assets/css/auth.css'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
-<body>
-<div class="login-wrapper">
-    <h2 class="mb-4 text-center">Área Administrativa</h2>
-    <?php if ($error): ?>
-        <div class="alert alert-danger"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
-    <?php endif; ?>
-    <form method="post" autocomplete="off">
-        <div class="form-group">
-            <label for="username">Usuário</label>
-            <input type="text" class="form-control" id="username" name="username" required>
+<body class="auth-body">
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <span class="brand-icon"><i class="bi bi-shield-lock"></i></span>
+            <div>
+                <h1>Jompson Admin</h1>
+                <p>Acesso reservado à equipa autorizada.</p>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="password">Senha</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
-    </form>
+        <?php if ($error): ?>
+            <div class="alert alert-danger" role="alert">
+                <?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
+        <?php endif; ?>
+        <form method="post" autocomplete="off" novalidate>
+            <div class="mb-3 text-start">
+                <label for="username" class="form-label">Utilizador</label>
+                <input type="text" class="form-control" id="username" name="username" required autofocus>
+            </div>
+            <div class="mb-4 text-start">
+                <label for="password" class="form-label">Palavra-passe</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Entrar no painel</button>
+        </form>
+    </div>
+    <p class="auth-footer">Precisa de apoio? Contacte <a href="mailto:info@jompson.com">info@jompson.com</a></p>
 </div>
 </body>
 </html>
